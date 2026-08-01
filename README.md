@@ -45,18 +45,26 @@ nick@bacpack:~$ bacpack due --days 14
 | 02 | **`classes`** | your classes and their ids, mostly so you can see what `--class` will match |
 | 03 | **`cas list`** | every CAS experience with hours, strands and reflection count |
 | 04 | **`cas outcomes`** | the seven IB learning outcomes and their ids — per school, so read, never hardcoded |
-| 05 | **`cas add`** | creates an experience. explicitly does not email your CAS advisor unless you ask |
-| 06 | **`cas reflect`** | adds a reflection to an experience, found by name. body only — see below |
-| 07 | **`portfolio list`** | portfolio entries with their tags and the first lines of each body |
-| 08 | **`portfolio tags`** | the works and the whole IB tag taxonomy, grouped. works change every September |
-| 09 | **`portfolio add`** | adds an entry. `--tags concepts/culture` by name, no id lookup |
-| 10 | **`portfolio edit`** | changes an entry. anything you don't pass keeps its current value |
-| 11 | **`portfolio star`** | toggles the star |
-| 12 | **`portfolio delete`** | removes an entry, after showing you which one |
+| 05 | **`cas groups`** | school groups you can attach an experience to |
+| 06 | **`cas add`** | creates an experience: strands, service type, approaches, supervisor, group, outcomes |
+| 07 | **`cas edit`** | changes one. anything you don't pass keeps its current value |
+| 08 | **`cas delete`** | removes one, after showing you its hours and reflection count |
+| 09 | **`cas reflect`** | adds a reflection to an experience, found by name. body only — see below |
+| 10 | **`class units`** | unit plans with their status and HL/SL badges |
+| 11 | **`class files`** | the class file tree, folders first |
+| 12 | **`class discussions`** | discussion threads with their ids |
+| 13 | **`portfolio list`** | portfolio entries with their tags and the first lines of each body |
+| 14 | **`portfolio tags`** | the works and the whole IB tag taxonomy, grouped. works change every September |
+| 15 | **`portfolio add`** | adds an entry. `--tags concepts/culture` by name, no id lookup |
+| 16 | **`portfolio edit`** | changes an entry. anything you don't pass keeps its current value |
+| 17 | **`portfolio star`** | toggles the star |
+| 18 | **`portfolio delete`** | removes an entry, after showing you which one |
 
 Every read takes `--json`. Every write previews and exits; `--confirm` is what actually posts.
 
-`portfolio edit` reads the entry first and reuses whatever you leave out. The edit form overwrites every field it posts, so `--body-file` on its own would otherwise wipe an entry's works and tags without mentioning it.
+`cas edit` and `portfolio edit` read the record first and reuse whatever you leave out. Both edit forms overwrite every field they post, so `--service 9` on its own would otherwise wipe the approaches, supervisor and outcomes without mentioning it.
+
+Two ManageBac quirks worth knowing. A CAS group can only be set when the experience is created: the edit form has no group field, so `cas edit` omits it rather than posting a blank that would unlink it. And `class_stream` has no command, because it renders no items in the page source for any class tested, so it is either drawn by JavaScript or unused.
 
 `cas reflect` takes a body and nothing else. The create form carries no learning-outcome checkboxes, and an `evidence[url]` value posts cleanly and then appears nowhere. Both were tested live and silently dropped, so there are no flags for them — a flag that previews confidently and changes nothing is worse than a missing feature.
 

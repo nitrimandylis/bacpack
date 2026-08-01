@@ -1,6 +1,6 @@
 // CAS experiences: list them, and create one.
 
-import { get, post, csrfToken, stripTags } from "./client.ts";
+import { get, post, csrfToken, stripTags, decodeEntities } from "./client.ts";
 
 const CAS_PATH = "/student/ib/activity/cas";
 const CAS_NEW_PATH = "/student/ib/activity/cas/new";
@@ -83,55 +83,202 @@ export function toManageBacDate(iso: string): string {
   return `${month} ${Number(match[3])}, ${match[1]}`;
 }
 
-export type NewExperience = {
+// Service action types are ManageBac-global and match the IB's four kinds.
+export const SERVICE_ACTION_TYPES: Record<string, string> = {
+  "1": "Direct",
+  "2": "Indirect",
+  "3": "Advocacy",
+  "4": "Research",
+};
+
+export const APPROACHES = ["ongoing", "school_based", "community_based", "individual"] as const;
+export type Approach = (typeof APPROACHES)[number];
+
+// One shape for both create and edit, so an edit cannot silently drop a field
+// that the create form set.
+export type ExperienceFields = {
   name: string;
-  start: string; // ISO
-  end: string; // ISO
+  startDate: string; // already in ManageBac's "August 1, 2026" form
+  endDate: string;
   creativityHours: number;
   actionHours: number;
   serviceHours: number;
-  outcomes: Outcome[];
-  notes: string;
   project: boolean;
+  serviceActionType: string; // "" or "1".."4"
+  approaches: Record<Approach, boolean>;
+  supervisorName: string;
+  supervisorTitle: string;
+  supervisorEmail: string;
+  supervisorPhone: string;
+  groupId: string;
+  notes: string;
+  outcomeIds: string[];
   notifyAdvisor: boolean;
 };
 
-export function buildForm(experience: NewExperience, token: string): URLSearchParams {
+export function emptyFields(): ExperienceFields {
+  return {
+    name: "",
+    startDate: "",
+    endDate: "",
+    creativityHours: 0,
+    actionHours: 0,
+    serviceHours: 0,
+    project: false,
+    serviceActionType: "",
+    approaches: { ongoing: false, school_based: false, community_based: false, individual: false },
+    supervisorName: "",
+    supervisorTitle: "",
+    supervisorEmail: "",
+    supervisorPhone: "",
+    groupId: "",
+    notes: "",
+    outcomeIds: [],
+    notifyAdvisor: false,
+  };
+}
+
+export function buildForm(fields: ExperienceFields, token: string, commit: string): URLSearchParams {
   const form = new URLSearchParams();
   form.set("authenticity_token", token);
-  form.set("cas_activity[name]", experience.name);
-  form.set("cas_activity[start_date]", toManageBacDate(experience.start));
-  form.set("cas_activity[end_date]", toManageBacDate(experience.end));
-  form.set("cas_activity[cas_project]", experience.project ? "1" : "0");
+  form.set("cas_activity[name]", fields.name);
+  form.set("cas_activity[start_date]", fields.startDate);
+  form.set("cas_activity[end_date]", fields.endDate);
+  form.set("cas_activity[cas_project]", fields.project ? "1" : "0");
 
   // Each strand is a checkbox plus an hours field. Hours above zero means the
   // strand is ticked; that is the only combination ManageBac renders sensibly.
   const strands: [string, number][] = [
-    ["creativity", experience.creativityHours],
-    ["action", experience.actionHours],
-    ["service", experience.serviceHours],
+    ["creativity", fields.creativityHours],
+    ["action", fields.actionHours],
+    ["service", fields.serviceHours],
   ];
   for (const [strand, hours] of strands) {
     form.set(`cas_activity[${strand}]`, hours > 0 ? "1" : "0");
     form.set(`cas_activity[${strand}_hours]`, hours.toFixed(1));
   }
 
-  form.set("cas_activity[notes]", experience.notes);
+  form.set("cas_activity[service_action_type]", fields.serviceActionType);
+  for (const approach of APPROACHES) {
+    form.set(`cas_activity[${approach}_approach]`, fields.approaches[approach] ? "1" : "0");
+  }
+
+  form.set("cas_activity[supervisor_name]", fields.supervisorName);
+  form.set("cas_activity[supervisor_title]", fields.supervisorTitle);
+  form.set("cas_activity[supervisor_email]", fields.supervisorEmail);
+  form.set("cas_activity[supervisor_contact_number]", fields.supervisorPhone);
+  // The edit form has no group select at all, so a group is settable only at
+  // creation and cannot be read back. Sending an empty value would risk
+  // clearing it on every edit, so the field is omitted unless it has a value.
+  if (fields.groupId) form.set("cas_activity[group_id]", fields.groupId);
+
+  form.set("cas_activity[notes]", fields.notes);
   form.append("cas_activity[learning_outcome_ids][]", "");
-  for (const outcome of experience.outcomes) {
-    form.append("cas_activity[learning_outcome_ids][]", outcome.id);
+  for (const id of fields.outcomeIds) {
+    form.append("cas_activity[learning_outcome_ids][]", id);
   }
 
   // This checkbox ships pre-checked in the HTML. Inheriting the default emails
   // the CAS advisor on every single entry, so it is always sent explicitly.
-  form.set("cas_activity[notify_cas_advisor_email]", experience.notifyAdvisor ? "1" : "0");
-  form.set("commit", "Add CAS Experience");
+  form.set("cas_activity[notify_cas_advisor_email]", fields.notifyAdvisor ? "1" : "0");
+  form.set("commit", commit);
   return form;
 }
 
-export async function createExperience(experience: NewExperience): Promise<void> {
+export async function createExperience(fields: ExperienceFields): Promise<void> {
   const html = await get(CAS_NEW_PATH);
-  await post(CAS_PATH, buildForm(experience, csrfToken(html)));
+  await post(CAS_PATH, buildForm(fields, csrfToken(html), "Add CAS Experience"));
+}
+
+// The edit form posts every field, so read the current values and let the CLI
+// override only what was passed. Same trap as the portfolio editor.
+export async function fetchExperienceFields(experienceId: string): Promise<ExperienceFields> {
+  const html = await get(`${CAS_PATH}/${experienceId}/edit`);
+  if (!html.includes("edit_cas_activity")) {
+    throw new Error(`No experience ${experienceId}, or the edit form changed shape.`);
+  }
+
+  // Attribute order is not stable in this markup: `checked` appears before
+  // `name` on some inputs and after it on others. Pull each tag out whole and
+  // read its attributes independently rather than assuming an order.
+  const tags = html.match(/<input\b[^>]*>/g) ?? [];
+  const attr = (tag: string, name: string): string =>
+    tag.match(new RegExp(`\\b${name}="([^"]*)"`))?.[1] ?? "";
+  const named = (field: string): string[] =>
+    tags.filter((tag) => attr(tag, "name") === `cas_activity[${field}]`);
+
+  const value = (field: string): string => {
+    const tag = named(field).find((candidate) => attr(candidate, "type") !== "hidden");
+    return tag ? attr(tag, "value") : "";
+  };
+  const ticked = (field: string): boolean =>
+    named(field).some((tag) => attr(tag, "type") === "checkbox" && tag.includes("checked"));
+
+  const fields = emptyFields();
+  fields.name = decodeEntities(value("name"));
+  fields.startDate = value("start_date");
+  fields.endDate = value("end_date");
+  fields.creativityHours = Number(value("creativity_hours")) || 0;
+  fields.actionHours = Number(value("action_hours")) || 0;
+  fields.serviceHours = Number(value("service_hours")) || 0;
+  fields.project = ticked("cas_project");
+
+  const chosenType = named("service_action_type").find(
+    (tag) => attr(tag, "type") === "radio" && tag.includes("checked"),
+  );
+  fields.serviceActionType = chosenType ? attr(chosenType, "value") : "";
+
+  for (const approach of APPROACHES) {
+    fields.approaches[approach] = ticked(`${approach}_approach`);
+  }
+
+  fields.supervisorName = decodeEntities(value("supervisor_name"));
+  fields.supervisorTitle = decodeEntities(value("supervisor_title"));
+  fields.supervisorEmail = decodeEntities(value("supervisor_email"));
+  fields.supervisorPhone = decodeEntities(value("supervisor_contact_number"));
+  // Left blank on purpose. The edit form carries no group select, so there is
+  // nothing to read; buildForm omits the field when it is empty rather than
+  // posting a blank that could unlink the group.
+  fields.groupId = "";
+  fields.notes = decodeEntities(
+    html.match(/name="cas_activity\[notes\]"[^>]*>([\s\S]*?)<\/textarea>/)?.[1] ?? "",
+  );
+  fields.outcomeIds = [...html.matchAll(/<input[^>]*id="cas_activity_learning_outcome_ids_(\d+)"[^>]*>/g)]
+    .filter((match) => match[0].includes("checked"))
+    .map((match) => match[1]);
+
+  return fields;
+}
+
+export async function updateExperience(
+  experienceId: string,
+  fields: ExperienceFields,
+): Promise<void> {
+  const path = `${CAS_PATH}/${experienceId}`;
+  const html = await get(`${path}/edit`);
+  const form = buildForm(fields, csrfToken(html), "Save Changes");
+  form.set("_method", "patch");
+  await post(path, form);
+}
+
+export async function deleteExperience(experienceId: string): Promise<void> {
+  const path = `${CAS_PATH}/${experienceId}`;
+  const html = await get(path);
+  const form = new URLSearchParams();
+  form.set("authenticity_token", csrfToken(html));
+  form.set("_method", "delete");
+  await post(path, form);
+}
+
+export type Group = { id: string; label: string };
+
+export async function fetchGroups(): Promise<Group[]> {
+  const html = await get(CAS_NEW_PATH);
+  const select = html.match(/<select[^>]*name="cas_activity\[group_id\]"[\s\S]*?<\/select>/)?.[0] ?? "";
+  return [...select.matchAll(/<option value="(\d+)"[^>]*>([^<]*)</g)].map((match) => ({
+    id: match[1],
+    label: stripTags(match[2]),
+  }));
 }
 
 export async function resolveExperience(query: string): Promise<Experience> {
