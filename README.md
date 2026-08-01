@@ -131,6 +131,12 @@ Three failure modes are handled by name, because all three have happened. `401` 
 
 **Stack:** Bun · TypeScript · `node:util` parseArgs · no runtime dependencies
 
+## 🙏 Credit
+
+The idea came from [rhijjawi/ManageBac-API](https://github.com/rhijjawi/ManageBac-API) by Ramzi, which worked out the part that is actually hard to guess: that a plain `_managebac_session` cookie is enough, and which page to point it at. Everything downstream of that follows.
+
+No code was taken. It last saw a real commit in 2021 and its selectors (`upcoming-tasks`, `task-node`, `js-presentation`, `date-badge`) match nothing on the 2026 pages, so bacpack reads the markup as it stands today. Knowing the door was unlocked was the contribution, and it saved an afternoon of wondering whether it was.
+
 ---
 
 <div align="center">
