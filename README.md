@@ -78,7 +78,7 @@ Needs [Bun](https://bun.sh). You supply two things: your school's subdomain, and
 git clone https://github.com/nitrimandylis/bacpack.git
 cd bacpack
 bun install
-bun run compile   # → ~/.bun/bin/bacpack, man bacpack, and the Claude skill
+bun run compile   # → ~/.bun/bin/bacpack, plus man bacpack
 ```
 
 Then, once:
@@ -101,7 +101,11 @@ man bacpack        # full reference, offline
 
 The second one prints what it would send and stops. Add `--confirm` when you mean it.
 
-`bun run compile` also installs a Claude Code skill from `.claude/skills/bacpack/`, so Claude knows the flags, that `--class` takes a name, and which fields ManageBac silently discards. Delete it from `~/.claude/skills/` if you'd rather it didn't.
+## 🤖 Driving it with an agent
+
+[`AGENTS.md`](AGENTS.md) is the operating manual for coding agents, in the vendor-neutral format most of them already look for. It covers the flags, but the useful half is what `--help` has no room for: which flag emails a real teacher, which field ManageBac accepts and then silently discards, which ids expire every September, and why a page that parses to nothing is breakage rather than a quiet week.
+
+Point your agent at it, or let it find the file itself. `bun run compile` also drops a copy where Claude Code looks; adapt that line for whatever you use.
 
 ## 🔩 Under the hood
 

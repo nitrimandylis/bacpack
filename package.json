@@ -9,7 +9,7 @@
     "bacpack": "./src/index.ts"
   },
   "scripts": {
-    "compile": "bun build --compile src/index.ts --outfile ~/.bun/bin/bacpack && mkdir -p $(brew --prefix)/share/man/man1 && cp man/bacpack.1 $(brew --prefix)/share/man/man1/ && mkdir -p ~/.claude/skills && cp -R .claude/skills/bacpack ~/.claude/skills/",
+    "compile": "bun build --compile src/index.ts --outfile ~/.bun/bin/bacpack && mkdir -p $(brew --prefix)/share/man/man1 && cp man/bacpack.1 $(brew --prefix)/share/man/man1/ && mkdir -p ~/.claude/skills/bacpack && cp AGENTS.md ~/.claude/skills/bacpack/SKILL.md",
     "test": "bun test"
   },
   "devDependencies": {
