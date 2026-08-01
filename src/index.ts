@@ -21,11 +21,16 @@ const HELP = `bacpack - ManageBac from the terminal
                   [--creativity H] [--action H] [--service H]
                   [--outcomes a,b] [--notes-file FILE] [--project]
                   [--notify-advisor] [--confirm]
+  bacpack cas reflect --experience NAME --body-file FILE.html [--confirm]
 
   bacpack portfolio list --class NAME [--json]
   bacpack portfolio tags --class NAME [--json]
   bacpack portfolio add --class NAME --body-file FILE.html
                         [--tags a,b] [--works a,b] [--confirm]
+  bacpack portfolio edit --class NAME --id N
+                        [--body-file FILE.html] [--tags a,b] [--works a,b] [--confirm]
+  bacpack portfolio star --class NAME --id N [--confirm]
+  bacpack portfolio delete --class NAME --id N [--confirm]
 
 --class takes part of a class name, not an id, e.g. --class greek
 Writes preview and exit without sending. Add --confirm to actually post.
@@ -55,6 +60,8 @@ const { values, positionals } = parseArgs({
     "body-file": { type: "string" },
     tags: { type: "string" },
     works: { type: "string" },
+    experience: { type: "string" },
+    id: { type: "string" },
   },
 });
 
@@ -184,6 +191,21 @@ async function main(): Promise<void> {
     return;
   }
 
+  if (command === "cas" && sub === "reflect") {
+    const experience = await cas.resolveExperience(required("experience"));
+    const body = readFile("body-file");
+
+    const ok = previewed([
+      ["experience", `${experience.name} (${experience.reflections})`],
+      ["body", `${body.length} chars, starts: ${body.slice(0, 60).replace(/\s+/g, " ")}`],
+    ]);
+    if (!ok) return;
+
+    await cas.addReflection(experience.id, body);
+    console.log("Posted.");
+    return;
+  }
+
   if (command === "portfolio") {
     const klass = await resolveClass(required("class"));
 
@@ -219,6 +241,58 @@ async function main(): Promise<void> {
 
       await portfolio.createEntry(klass.id, body, tags, works);
       console.log("Posted.");
+      return;
+    }
+
+    if (sub === "edit") {
+      const entryId = required("id");
+      const current = await portfolio.fetchEntry(klass.id, entryId);
+      const taxonomy = await portfolio.fetchTaxonomy(klass.id);
+
+      // Anything not passed keeps whatever the entry already has, because the
+      // edit form overwrites every field it posts.
+      const body = values["body-file"] ? readFile("body-file") : current.body;
+      const tags = values.tags
+        ? portfolio.resolveByLabel(commaList("tags"), taxonomy.tags, "tag")
+        : portfolio.resolveByLabel(current.tagIds, taxonomy.tags, "tag");
+      const works = values.works
+        ? portfolio.resolveByLabel(commaList("works"), taxonomy.works, "work")
+        : portfolio.resolveByLabel(current.workIds, taxonomy.works, "work");
+
+      const kept = (changed: boolean) => (changed ? "" : "  (unchanged)");
+      const ok = previewed([
+        ["entry", `${entryId} in ${klass.name}`],
+        ["works", (works.map((w) => w.label).join(", ") || "(none)") + kept(!!values.works)],
+        [
+          "tags",
+          (tags.map((t) => `${t.category}/${t.label}`).join(", ") || "(none)") + kept(!!values.tags),
+        ],
+        ["body", `${body.length} chars` + kept(!!values["body-file"])],
+      ]);
+      if (!ok) return;
+
+      await portfolio.updateEntry(klass.id, entryId, body, tags, works);
+      console.log("Saved.");
+      return;
+    }
+
+    if (sub === "star" || sub === "delete") {
+      const entryId = required("id");
+      const entries = await portfolio.listEntries(klass.id);
+      const entry = entries.find((candidate) => candidate.id === entryId);
+      if (!entry) throw new Error(`No entry ${entryId} on the first page of ${klass.name}.`);
+
+      const ok = previewed([
+        [sub === "star" ? "star/unstar" : "DELETE", `${entryId} in ${klass.name}`],
+        ["dated", entry.date],
+        ["tags", entry.tags.join(", ") || "(none)"],
+        ["body", entry.body.slice(0, 80)],
+      ]);
+      if (!ok) return;
+
+      if (sub === "star") await portfolio.starEntry(klass.id, entryId);
+      else await portfolio.deleteEntry(klass.id, entryId);
+      console.log(sub === "star" ? "Toggled." : "Deleted.");
       return;
     }
   }

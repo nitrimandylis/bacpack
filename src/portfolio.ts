@@ -4,7 +4,7 @@
 // and the other six all flatten into one evidence_tag_ids list. There is no
 // title field, so a title has to be the first block of the body HTML.
 
-import { get, post, csrfToken, stripTags } from "./client.ts";
+import { get, post, csrfToken, stripTags, decodeEntities } from "./client.ts";
 
 export type Tag = { id: string; label: string; category: string };
 export type Work = { id: string; label: string };
@@ -76,6 +76,13 @@ export function resolveByLabel<T extends { id: string; label: string; category?:
 
     const needle = query.toLowerCase();
 
+    // Previews print "Category/Label", so accept that back as input rather
+    // than making the tool's own output invalid. Spacing around the slash is
+    // ignored so both "Concepts/Culture" and "Concepts / Culture" work.
+    const normalise = (text: string) => text.toLowerCase().replace(/\s*\/\s*/g, "/").trim();
+    const qualified = available.filter((item) => normalise(show(item)) === normalise(query));
+    if (qualified.length === 1) return qualified[0];
+
     // An exact label wins outright, otherwise "Culture" is forever ambiguous
     // against "Culture, identity and community".
     const exact = available.filter((item) => item.label.toLowerCase() === needle);
@@ -120,4 +127,63 @@ export async function createEntry(
 ): Promise<void> {
   const html = await get(`${reflectionsPath(classId)}/new`);
   await post(reflectionsPath(classId), buildForm(body, tags, works, csrfToken(html)));
+}
+
+export type CurrentEntry = { body: string; tagIds: string[]; workIds: string[] };
+
+// The edit form posts every field, so anything not sent is cleared. Read what
+// is already ticked and treat it as the default, or `--body-file` alone would
+// silently wipe an entry's whole taxonomy.
+export async function fetchEntry(classId: string, entryId: string): Promise<CurrentEntry> {
+  const html = await get(`${reflectionsPath(classId)}/${entryId}/edit`);
+  if (!html.includes("edit_evidence")) {
+    throw new Error(`No entry ${entryId} in that class, or the edit form changed shape.`);
+  }
+
+  const checkedIds = (kind: string): string[] =>
+    [...html.matchAll(new RegExp(`<input[^>]*id="evidence_${kind}_(\\d+)"[^>]*>`, "g"))]
+      .filter((match) => match[0].includes("checked"))
+      .map((match) => match[1]);
+
+  const body = html.match(/name="evidence\[body\]"[^>]*>([\s\S]*?)<\/textarea>/)?.[1] ?? "";
+  return {
+    body: decodeEntities(body),
+    tagIds: checkedIds("evidence_tag_ids"),
+    workIds: checkedIds("oral_work_ids"),
+  };
+}
+
+export async function updateEntry(
+  classId: string,
+  entryId: string,
+  body: string,
+  tags: Tag[],
+  works: Work[],
+): Promise<void> {
+  const path = `${reflectionsPath(classId)}/${entryId}`;
+  const html = await get(`${path}/edit`);
+  const form = buildForm(body, tags, works, csrfToken(html));
+  form.set("_method", "patch");
+  form.set("commit", "Save Entry");
+  await post(path, form);
+}
+
+async function methodCall(path: string, method: string, referer: string): Promise<void> {
+  const html = await get(referer);
+  const form = new URLSearchParams();
+  form.set("authenticity_token", csrfToken(html));
+  form.set("_method", method);
+  await post(path, form);
+}
+
+export async function deleteEntry(classId: string, entryId: string): Promise<void> {
+  await methodCall(`${reflectionsPath(classId)}/${entryId}`, "delete", reflectionsPath(classId));
+}
+
+export async function starEntry(classId: string, entryId: string): Promise<void> {
+  await methodCall(
+    `${reflectionsPath(classId)}/${entryId}/star`,
+    "patch",
+    reflectionsPath(classId),
+  );
 }

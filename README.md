@@ -46,11 +46,19 @@ nick@bacpack:~$ bacpack due --days 14
 | 03 | **`cas list`** | every CAS experience with hours, strands and reflection count |
 | 04 | **`cas outcomes`** | the seven IB learning outcomes and their ids — per school, so read, never hardcoded |
 | 05 | **`cas add`** | creates an experience. explicitly does not email your CAS advisor unless you ask |
-| 06 | **`portfolio list`** | portfolio entries with their tags and the first lines of each body |
-| 07 | **`portfolio tags`** | the works and the whole IB tag taxonomy, grouped. works change every September |
-| 08 | **`portfolio add`** | adds an entry. `--tags concepts,culture` by name, no id lookup |
+| 06 | **`cas reflect`** | adds a reflection to an experience, found by name. body only — see below |
+| 07 | **`portfolio list`** | portfolio entries with their tags and the first lines of each body |
+| 08 | **`portfolio tags`** | the works and the whole IB tag taxonomy, grouped. works change every September |
+| 09 | **`portfolio add`** | adds an entry. `--tags concepts/culture` by name, no id lookup |
+| 10 | **`portfolio edit`** | changes an entry. anything you don't pass keeps its current value |
+| 11 | **`portfolio star`** | toggles the star |
+| 12 | **`portfolio delete`** | removes an entry, after showing you which one |
 
 Every read takes `--json`. Every write previews and exits; `--confirm` is what actually posts.
+
+`portfolio edit` reads the entry first and reuses whatever you leave out. The edit form overwrites every field it posts, so `--body-file` on its own would otherwise wipe an entry's works and tags without mentioning it.
+
+`cas reflect` takes a body and nothing else. The create form carries no learning-outcome checkboxes, and an `evidence[url]` value posts cleanly and then appears nowhere. Both were tested live and silently dropped, so there are no flags for them — a flag that previews confidently and changes nothing is worse than a missing feature.
 
 `--class` takes part of a class name, not an id: `--class greek`. Ids change each school year, and every class exposes the portfolio route, so a name is both safer and shorter than the number.
 

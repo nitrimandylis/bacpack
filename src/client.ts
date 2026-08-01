@@ -119,12 +119,12 @@ const ENTITIES: Record<string, string> = {
   "&nbsp;": " ",
 };
 
+export function decodeEntities(html: string): string {
+  return html.replace(/&amp;|&lt;|&gt;|&quot;|&#39;|&nbsp;/g, (entity) => ENTITIES[entity]);
+}
+
 export function stripTags(html: string): string {
-  return html
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&amp;|&lt;|&gt;|&quot;|&#39;|&nbsp;/g, (entity) => ENTITIES[entity])
-    .replace(/\s+/g, " ")
-    .trim();
+  return decodeEntities(html.replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim();
 }
 
 export type Klass = { id: string; name: string };

@@ -133,3 +133,44 @@ export async function createExperience(experience: NewExperience): Promise<void>
   const html = await get(CAS_NEW_PATH);
   await post(CAS_PATH, buildForm(experience, csrfToken(html)));
 }
+
+export async function resolveExperience(query: string): Promise<Experience> {
+  const all = await listExperiences();
+
+  const byId = all.find((experience) => experience.id === query);
+  if (byId) return byId;
+
+  const needle = query.toLowerCase();
+  const hits = all.filter((experience) => experience.name.toLowerCase().includes(needle));
+  if (hits.length === 1) return hits[0];
+
+  const listing = (items: Experience[]) => items.map((e) => `  ${e.name}`).join("\n");
+  if (hits.length === 0) {
+    throw new Error(`No experience matches "${query}". Yours:\n${listing(all)}`);
+  }
+  throw new Error(`"${query}" matches ${hits.length} experiences:\n${listing(hits)}`);
+}
+
+// A CAS reflection is the same JournalEvidence form the Learner Portfolio
+// uses, but stripped down: body only.
+//
+// It deliberately does not send learning outcomes or a link. The create form
+// carries no learning-outcome checkboxes at all, and an `evidence[url]` value
+// posts without error and then appears nowhere. Both were tested live on
+// 2026-08-01 and silently dropped, so offering flags for them would print a
+// confident preview and change nothing.
+export function buildReflectionForm(body: string, token: string): URLSearchParams {
+  const form = new URLSearchParams();
+  form.set("authenticity_token", token);
+  form.set("modal", "true");
+  form.set("type", "JournalEvidence");
+  form.set("evidence[body]", body);
+  form.set("commit", "Add Entry");
+  return form;
+}
+
+export async function addReflection(experienceId: string, body: string): Promise<void> {
+  const path = `${CAS_PATH}/${experienceId}/reflections`;
+  const html = await get(`${path}/new`);
+  await post(path, buildReflectionForm(body, csrfToken(html)));
+}
