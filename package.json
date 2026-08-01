@@ -1,0 +1,17 @@
+{
+  "name": "bacpack",
+  "version": "0.1.0",
+  "description": "ManageBac CLI: check what's due, log CAS experiences, and add Learner Portfolio entries from the terminal.",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "bacpack": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "bun build --compile --outfile bacpack src/index.ts",
+    "test": "bun test"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}
