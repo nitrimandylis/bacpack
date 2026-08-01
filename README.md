@@ -103,9 +103,15 @@ The second one prints what it would send and stops. Add `--confirm` when you mea
 
 ## 🤖 Driving it with an agent
 
-[`AGENTS.md`](AGENTS.md) is the operating manual for coding agents, in the vendor-neutral format most of them already look for. It covers the flags, but the useful half is what `--help` has no room for: which flag emails a real teacher, which field ManageBac accepts and then silently discards, which ids expire every September, and why a page that parses to nothing is breakage rather than a quiet week.
+[`bacpack-cli/SKILL.md`](bacpack-cli/SKILL.md) is the operating manual for coding agents. It covers the flags, but the useful half is what `--help` has no room for: which flag emails a real teacher, which field ManageBac accepts and then silently discards, which ids expire every September, and why a page that parses to nothing is breakage rather than a quiet week.
 
-Point your agent at it, or let it find the file itself. `bun run compile` also drops a copy where Claude Code looks; adapt that line for whatever you use.
+It's a plain directory, not a vendor one, so drop it wherever your agent keeps skills:
+
+```bash
+cp -R bacpack-cli ~/.claude/skills/     # or wherever yours looks
+```
+
+`bun run compile` does exactly that line. Change the destination to suit.
 
 ## 🔩 Under the hood
 

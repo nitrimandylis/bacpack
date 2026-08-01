@@ -1,5 +1,5 @@
 ---
-name: bacpack
+name: bacpack-cli
 description: Drive ManageBac from the terminal via the bacpack CLI — check what is due, log CAS experiences and reflections, and write Learner Portfolio entries. Use whenever the user asks what is due or overdue, mentions CAS hours or reflections, the Learner Portfolio or IA tab, wants coursework pushed into ManageBac, or names ManageBac at all.
 ---
 
