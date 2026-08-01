@@ -111,7 +111,7 @@ It's a plain directory, not a vendor one, so drop it wherever your agent keeps s
 cp -R bacpack-cli ~/.claude/skills/     # or wherever yours looks
 ```
 
-`bun run compile` does exactly that line. Change the destination to suit.
+`bun run compile` runs that line for you if `~/.claude/skills` already exists, and skips it if it doesn't — it won't create an agent's directory on a machine that never asked for one. Copy it wherever yours looks instead.
 
 ## 🔩 Under the hood
 
