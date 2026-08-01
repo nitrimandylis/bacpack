@@ -78,7 +78,7 @@ Needs [Bun](https://bun.sh). You supply two things: your school's subdomain, and
 git clone https://github.com/nitrimandylis/bacpack.git
 cd bacpack
 bun install
-bun run build            # single binary, no bun needed after this
+bun run compile   # → ~/.bun/bin/bacpack, man bacpack, and the Claude skill
 ```
 
 Then, once:
@@ -94,11 +94,14 @@ chmod 600 ~/.config/managebac/cookie
 To find the cookie: log in to ManageBac, open devtools, Application → Cookies → your ManageBac domain, copy the value of `_managebac_session`. It lasts about a year. When it dies you get a clean 401 telling you so, not a silent empty result.
 
 ```bash
-./bacpack due
-./bacpack portfolio add --class greek --body-file entry.html --tags culture
+bacpack due
+bacpack portfolio add --class greek --body-file entry.html --tags culture
+man bacpack        # full reference, offline
 ```
 
 The second one prints what it would send and stops. Add `--confirm` when you mean it.
+
+`bun run compile` also installs a Claude Code skill from `.claude/skills/bacpack/`, so Claude knows the flags, that `--class` takes a name, and which fields ManageBac silently discards. Delete it from `~/.claude/skills/` if you'd rather it didn't.
 
 ## 🔩 Under the hood
 

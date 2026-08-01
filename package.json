@@ -3,12 +3,13 @@
   "version": "0.1.0",
   "description": "ManageBac CLI: check what's due, log CAS experiences, and add Learner Portfolio entries from the terminal.",
   "type": "module",
+  "private": true,
   "license": "MIT",
   "bin": {
     "bacpack": "./src/index.ts"
   },
   "scripts": {
-    "build": "bun build --compile --outfile bacpack src/index.ts",
+    "compile": "bun build --compile src/index.ts --outfile ~/.bun/bin/bacpack && mkdir -p $(brew --prefix)/share/man/man1 && cp man/bacpack.1 $(brew --prefix)/share/man/man1/ && mkdir -p ~/.claude/skills && cp -R .claude/skills/bacpack ~/.claude/skills/",
     "test": "bun test"
   },
   "devDependencies": {

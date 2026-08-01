@@ -1,0 +1,132 @@
+.TH BACPACK 1 "2026-08-01" "bacpack 0.1.0" "User Commands"
+.SH NAME
+bacpack \- read and write ManageBac from the terminal
+.SH SYNOPSIS
+.B bacpack
+[\fIcommand\fR] [\fIsubcommand\fR] [\fIoptions\fR]
+.SH DESCRIPTION
+Reads a student's own ManageBac pages over an ordinary session cookie, and
+writes the two
+plain text forms ManageBac exposes: CAS experiences and Learner Portfolio
+entries.
+The official ManageBac+ API is administrator-only, so this drives the web
+interface instead.
+.PP
+Reads are live and nothing is cached. Every write prints a preview and exits
+without sending;
+.B \-\-confirm
+is what actually posts.
+.SH ENVIRONMENT
+.TP
+.B MANAGEBAC_SCHOOL
+Required. The subdomain of your school's ManageBac, e.g.
+.B cgs
+for cgs.managebac.com.
+.SH FILES
+.TP
+.I ~/.config/managebac/cookie
+The value of your
+.B _managebac_session
+cookie, copied from a browser. Lasts about a year. When it expires bacpack
+exits with a
+clear 401 rather than reporting an empty result.
+.SH COMMANDS
+.TP
+.B due
+Upcoming deadlines. ManageBac prints dates without a year, so it is inferred:
+a month and day
+already past belongs to next year. Teachers post duplicate deadlines, so only
+exact
+title-plus-time collisions are removed.
+.TP
+.B classes
+Your classes and their ids.
+.TP
+.B cas list
+CAS experiences with hours, badges and reflection counts.
+.TP
+.B cas outcomes
+The seven IB learning outcomes and their ids, read live because they are per
+school.
+.TP
+.B cas groups
+School groups an experience can be attached to.
+.TP
+.B "cas add"
+Create a CAS experience.
+.TP
+.B "cas edit \-\-experience \fINAME\fR"
+Change one. Anything not passed keeps its current value.
+.TP
+.B "cas delete \-\-experience \fINAME\fR"
+Remove one, after showing its hours and reflection count.
+.TP
+.B "cas reflect \-\-experience \fINAME\fR \-\-body\-file \fIFILE\fR"
+Add a reflection. Body only: the form carries no other usable field.
+.TP
+.B "class units|files|discussions \-\-class \fINAME\fR"
+Unit plans, the class file tree, or discussion threads.
+.TP
+.B "portfolio list \-\-class \fINAME\fR"
+Learner Portfolio entries with their tags.
+.TP
+.B "portfolio tags \-\-class \fINAME\fR"
+The works and the full tag taxonomy, grouped by category. Works change every
+September.
+.TP
+.B "portfolio add \-\-class \fINAME\fR \-\-body\-file \fIFILE\fR"
+Add an entry. There is no title field; fold the title into the body HTML.
+.TP
+.B "portfolio edit \-\-class \fINAME\fR \-\-id \fIN\fR"
+Change an entry. Anything not passed keeps its current value.
+.TP
+.B "portfolio star|delete \-\-class \fINAME\fR \-\-id \fIN\fR"
+Toggle the star, or remove the entry.
+.SH OPTIONS
+.TP
+.BR \-h ", " \-\-help
+Show help.
+.TP
+.B \-\-confirm
+Actually send the write. Without it, every write previews and exits.
+.TP
+.B \-\-json
+Machine-readable output. Available on every read.
+.TP
+.BI \-\-class " NAME"
+Part of a class name, not an id: \fB\-\-class greek\fR. Ids change each school
+year, and every
+class exposes the portfolio route, so a name is both safer and shorter.
+.TP
+.BI \-\-days " N"
+Limit \fBdue\fR to the next N days.
+.TP
+.BI \-\-creativity " H" ", " \-\-action " H" ", " \-\-service " H"
+Hours per CAS strand.
+.TP
+.BI \-\-service\-type " TYPE"
+One of direct, indirect, advocacy, research.
+.TP
+.BI \-\-approaches " LIST"
+Comma separated: ongoing, school-based, community-based, individual.
+.TP
+.BI \-\-outcomes " LIST"
+Comma separated learning outcome names.
+.TP
+.BI \-\-tags " LIST" ", " \-\-works " LIST"
+Comma separated portfolio taxonomy values. Punctuation is flattened before
+matching, so values
+copied from another system resolve even when their commas differ. Qualify an
+ambiguous label as
+\fBConcepts/Culture\fR.
+.TP
+.B \-\-notify\-advisor
+Email the CAS advisor. Off unless passed. The ManageBac checkbox ships
+pre-ticked, so bacpack
+always sends the field explicitly.
+.SH EXIT STATUS
+Non-zero on a dead cookie, an unresolvable class or tag, or a page that parsed
+to nothing.
+The last case means ManageBac changed its markup, not that there is no work due.
+.SH SEE ALSO
+.BR bun (1)
