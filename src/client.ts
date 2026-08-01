@@ -23,7 +23,7 @@ function baseUrl(): string {
   if (!school) {
     throw new Error(
       "MANAGEBAC_SCHOOL is not set.\n" +
-        "It is the subdomain of your school's ManageBac, e.g. MANAGEBAC_SCHOOL=cgs for cgs.managebac.com",
+        "It is the subdomain of your school's ManageBac, e.g. MANAGEBAC_SCHOOL=acme for acme.managebac.com",
     );
   }
   return `https://${school}.managebac.com`;

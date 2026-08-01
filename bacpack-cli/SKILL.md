@@ -12,7 +12,7 @@ database, **you** are the glue that reads it and builds the command.
 ## Before anything
 
 ```bash
-export MANAGEBAC_SCHOOL=<subdomain>     # cgs for cgs.managebac.com
+export MANAGEBAC_SCHOOL=<subdomain>     # acme for acme.managebac.com
 ```
 
 The session cookie lives at `~/.config/managebac/cookie`. **Never read, print, echo or pass it
