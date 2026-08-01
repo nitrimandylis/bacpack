@@ -62,6 +62,20 @@ export async function fetchTaxonomy(classId: string): Promise<{ tags: Tag[]; wor
   return { tags, works };
 }
 
+// Flattens punctuation so labels from different systems can be compared.
+// Notion cannot store a comma in a select option at all, while ManageBac
+// writes "Culture, identity and community" and "Paper 1: Guided analysis".
+// Matching them exactly is impossible by construction, so both sides get
+// their punctuation reduced to spaces before comparison.
+export function flatten(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[,:;.–—-]/g, " ")
+    .replace(/\s*\/\s*/g, "/")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function resolveByLabel<T extends { id: string; label: string; category?: string }>(
   queries: string[],
   available: T[],
@@ -74,21 +88,19 @@ export function resolveByLabel<T extends { id: string; label: string; category?:
     const byId = available.find((item) => item.id === query);
     if (byId) return byId;
 
-    const needle = query.toLowerCase();
+    const needle = flatten(query);
 
     // Previews print "Category/Label", so accept that back as input rather
-    // than making the tool's own output invalid. Spacing around the slash is
-    // ignored so both "Concepts/Culture" and "Concepts / Culture" work.
-    const normalise = (text: string) => text.toLowerCase().replace(/\s*\/\s*/g, "/").trim();
-    const qualified = available.filter((item) => normalise(show(item)) === normalise(query));
+    // than making the tool's own output invalid.
+    const qualified = available.filter((item) => flatten(show(item)) === needle);
     if (qualified.length === 1) return qualified[0];
 
     // An exact label wins outright, otherwise "Culture" is forever ambiguous
     // against "Culture, identity and community".
-    const exact = available.filter((item) => item.label.toLowerCase() === needle);
+    const exact = available.filter((item) => flatten(item.label) === needle);
     if (exact.length === 1) return exact[0];
 
-    const hits = available.filter((item) => item.label.toLowerCase().includes(needle));
+    const hits = available.filter((item) => flatten(item.label).includes(needle));
     if (hits.length === 1) return hits[0];
 
     if (hits.length === 0) {
