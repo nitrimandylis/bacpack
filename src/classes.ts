@@ -67,10 +67,11 @@ export async function listFiles(classId: string): Promise<ClassFile[]> {
   return files;
 }
 
-// Slashes in a ManageBac file or folder name would silently write outside the
-// target directory.
-function safeName(name: string): string {
-  return name.replace(/[/\\]/g, "-").trim() || "untitled";
+// A ManageBac file or folder name is remote input on the way to a filesystem
+// path. Strip separators, then reject an all-dots name: with no separator
+// left, ".." is the only remaining string that can walk out of the target.
+export function safeName(name: string): string {
+  return name.replace(/[/\\]/g, "-").replace(/^\.+$/, "").trim() || "untitled";
 }
 
 // A folder really can hold two different files under one name: Modern Greek A

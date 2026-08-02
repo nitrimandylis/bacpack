@@ -3,7 +3,7 @@
 // trimmed from a real /files/folder page.
 
 import { test, expect } from "bun:test";
-import { assetsOn } from "./classes.ts";
+import { assetsOn, safeName } from "./classes.ts";
 
 const ROW = (id: string, name: string, size: number) =>
   `<div class='row file px-4' data-ec3-info='{&quot;download_url&quot;:` +
@@ -29,4 +29,12 @@ test("the same row rendered twice on a page counts once", () => {
   const html = ROW("1", "a.pdf", 10) + ROW("2", "b.pdf", 20) + ROW("1", "a.pdf", 10);
 
   expect(assetsOn(html, "").map((f) => f.name)).toEqual(["a.pdf", "b.pdf"]);
+});
+
+test("a name cannot walk out of the download directory", () => {
+  expect(safeName("..")).toBe("untitled");
+  expect(safeName("../../etc")).toBe("..-..-etc");
+  expect(safeName("/etc/passwd")).toBe("-etc-passwd");
+  // Leading dots are only a problem when that is the whole name.
+  expect(safeName("..hidden.pdf")).toBe("..hidden.pdf");
 });

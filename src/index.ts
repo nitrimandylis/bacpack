@@ -347,7 +347,7 @@ async function main(): Promise<void> {
         return;
       }
       // Not a write to ManageBac, so no --confirm: this only touches your disk.
-      const target = join(dir, klass.name.replace(/[/\\]/g, "-"));
+      const target = join(dir, classes.safeName(klass.name));
       const written = await classes.download(files, target);
       console.log(`${written.length} new of ${files.length} files -> ${target}`);
       return;
