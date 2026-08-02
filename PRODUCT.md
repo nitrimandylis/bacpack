@@ -12,8 +12,9 @@ Reads are live. Nothing is mirrored locally, so nothing can go stale.
 
 Three facts about ManageBac make a naive scraper quietly wrong rather than loudly broken:
 
-1. The session cookie **rotates mid-conversation**, and replaying the original returns 422. It
-   reads like rate limiting and is not.
+1. Requests without an **`Accept: text/html`** header get 422 about half the time. It reads
+   like rate limiting, or like the session cookie rotating, and is neither. ManageBac does hand
+   back a different cookie, but adopting it is what actually breaks the session.
 2. Deadlines are printed **without a year**.
 3. Teachers **post the same deadline twice**, with different ids and slightly different titles.
 

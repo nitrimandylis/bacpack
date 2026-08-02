@@ -29,7 +29,7 @@ ManageBac has a public API. It is administrator-only, and if you are a student y
 
 It does three things. It tells you what is due, it logs CAS experiences, and it adds entries to a Learner Portfolio. Reads are live, so there is no local copy to go stale. Writes print what they are about to send and then stop, because a school record is not a place to find out your flags were wrong.
 
-The interesting parts are not the HTTP. ManageBac rotates your session cookie mid-conversation and answers 422 when you replay the old one, which reads like rate limiting and is not. It prints dates without a year. Teachers post the same deadline twice. bacpack is mostly the handling of those three facts.
+The interesting parts are not the HTTP. ManageBac answers 422 to about half of all requests unless you send `Accept: text/html`, which reads like rate limiting and is not. It prints dates without a year. Teachers post the same deadline twice. bacpack is mostly the handling of those three facts.
 
 ```console
 nick@bacpack:~$ bacpack due --days 14
@@ -51,7 +51,7 @@ nick@bacpack:~$ bacpack due --days 14
 | 08 | **`cas delete`** | removes one, after showing you its hours and reflection count |
 | 09 | **`cas reflect`** | adds a reflection to an experience, found by name. body only — see below |
 | 10 | **`class units`** | unit plans with their status and HL/SL badges |
-| 11 | **`class files`** | the class file tree, folders first |
+| 11 | **`class files`** | every file in the class, folder by folder. `--download DIR` saves them all |
 | 12 | **`class discussions`** | discussion threads with their ids |
 | 13 | **`portfolio list`** | portfolio entries with their tags and the first lines of each body |
 | 14 | **`portfolio tags`** | the works and the whole IB tag taxonomy, grouped. works change every September |
@@ -131,13 +131,13 @@ flowchart LR
 
 | layer | path | job |
 |---|---|---|
-| client | `src/client.ts` | one session. carries the rotated cookie forward, retries, tells 401 from 422, resolves a class by name |
+| client | `src/client.ts` | one session, replayed unchanged. sends `Accept: text/html`, retries, tells 401 from 422, resolves a class by name |
 | due | `src/due.ts` | year inference, dedupe, and the guard that shouts when the selectors rot instead of reporting nothing due |
 | cas | `src/cas.ts` | experiences and the create form, including the advisor-email checkbox that ships pre-ticked |
 | portfolio | `src/portfolio.ts` | reflections, the tag taxonomy, and the create form that has no title field |
 | cli | `src/index.ts` | argument parsing and the preview that stands between you and a permanent record |
 
-Three failure modes are handled by name, because all three have happened. `401` means the cookie died, so it says so and stops. `422` means the session rotated, so it retries with the new one. `200` with nothing parseable means ManageBac changed its markup, so it exits non-zero rather than telling you your week is clear.
+Three failure modes are handled by name, because all three have happened. `401` means the cookie died, so it says so and stops. `422` means Rails refused the request format, which the `Accept` header prevents and the retry loop covers. `200` with nothing parseable means ManageBac changed its markup, so it exits non-zero rather than telling you your week is clear.
 
 **Stack:** Bun · TypeScript · `node:util` parseArgs · no runtime dependencies
 

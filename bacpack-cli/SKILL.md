@@ -39,6 +39,7 @@ bacpack cas list [--json]               # experiences with hours, badges, reflec
 bacpack cas outcomes                    # the 7 learning outcomes and their ids
 bacpack cas groups
 bacpack class units|files|discussions --class NAME [--json]
+bacpack class files --class NAME --download DIR   # saves every file, resumable, no --confirm
 bacpack portfolio list --class NAME [--json]
 bacpack portfolio tags --class NAME     # live works + the whole tag taxonomy
 ```

@@ -2,7 +2,7 @@
 //
 // Three failure modes are real and are handled explicitly:
 //   401  the cookie is dead, tell the user to refresh it, never retry
-//   422  the server rotated the session cookie, retry after carrying it forward
+//   422  Rails refusing the request format, see ACCEPT below
 //   200 with nothing parseable  the selectors rotted, callers must shout
 
 import { readFileSync } from "node:fs";
@@ -13,9 +13,14 @@ const COOKIE_PATH = join(homedir(), ".config", "managebac", "cookie");
 const USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)";
 const MAX_ATTEMPTS = 4;
 
-// The current session cookie value. ManageBac hands back a new one in
-// Set-Cookie on most responses; replaying the original file value on every
-// request is what causes intermittent 422s.
+// Load-bearing. With the default */* that fetch sends, ManageBac answers 422
+// on roughly half of all requests to /files. With this header it is 200 every
+// time. Rails content negotiation, not rate limiting and not the session.
+const ACCEPT = "text/html";
+
+// The session cookie, read once and replayed unchanged on every request.
+// ManageBac does hand back a different value in Set-Cookie, but that value is
+// a downgrade: adopting it makes every later request 422 with no recovery.
 let session = "";
 
 function baseUrl(): string {
@@ -44,17 +49,6 @@ function loadCookie(): string {
   return value;
 }
 
-function rememberRotation(response: Response): void {
-  const headers = response.headers as Headers & { getSetCookie?: () => string[] };
-  const cookies = headers.getSetCookie
-    ? headers.getSetCookie()
-    : [response.headers.get("set-cookie") ?? ""];
-  for (const cookie of cookies) {
-    const match = cookie.match(/_managebac_session=([^;]+)/);
-    if (match) session = match[1];
-  }
-}
-
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -70,10 +64,10 @@ async function request(path: string, body?: URLSearchParams): Promise<{ status: 
       redirect: "manual",
       headers: {
         "User-Agent": USER_AGENT,
+        Accept: ACCEPT,
         Cookie: `_managebac_session=${session}`,
       },
     });
-    rememberRotation(response);
     lastStatus = response.status;
 
     // A Rails form POST answers 302 on success, so treat any redirect as one.

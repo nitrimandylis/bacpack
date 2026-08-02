@@ -5,6 +5,7 @@
 
 import { parseArgs } from "node:util";
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { resolveClass, listClasses } from "./client.ts";
 import { fetchTasks, withinDays, type Task } from "./due.ts";
 import * as cas from "./cas.ts";
@@ -32,7 +33,7 @@ const HELP = `bacpack - ManageBac from the terminal
     --supervisor-name/-title/-email/-phone TEXT
 
   bacpack class units --class NAME [--json]
-  bacpack class files --class NAME [--json]
+  bacpack class files --class NAME [--json] [--download DIR]
   bacpack class discussions --class NAME [--json]
 
   bacpack portfolio list --class NAME [--json]
@@ -58,6 +59,7 @@ const { values, positionals } = parseArgs({
     json: { type: "boolean" },
     days: { type: "string" },
     class: { type: "string" },
+    download: { type: "string" },
     confirm: { type: "boolean" },
     name: { type: "string" },
     start: { type: "string" },
@@ -339,7 +341,15 @@ async function main(): Promise<void> {
     }
     if (sub === "files") {
       const files = await classes.listFiles(klass.id);
-      print(files, files.map((f) => `${f.folder ? "dir " : "file"}  ${f.name}`));
+      const dir = values.download;
+      if (!dir) {
+        print(files, files.map((f) => `${(f.folder || ".").padEnd(20)}  ${f.name}`));
+        return;
+      }
+      // Not a write to ManageBac, so no --confirm: this only touches your disk.
+      const target = join(dir, klass.name.replace(/[/\\]/g, "-"));
+      const written = await classes.download(files, target);
+      console.log(`${written.length} new of ${files.length} files -> ${target}`);
       return;
     }
     if (sub === "discussions") {

@@ -65,7 +65,13 @@ Remove one, after showing its hours and reflection count.
 Add a reflection. Body only: the form carries no other usable field.
 .TP
 .B "class units|files|discussions \-\-class \fINAME\fR"
-Unit plans, the class file tree, or discussion threads.
+Unit plans, every file in the class, or discussion threads.
+.TP
+.B "class files \-\-class \fINAME\fR \-\-download \fIDIR\fR"
+Save every file under \fIDIR/<class name>/<folder>/\fR, keeping the folder
+layout. Files already on disk are skipped, so an interrupted run resumes by
+running it again. No \fB\-\-confirm\fR: this writes to your disk, not to
+ManageBac.
 .TP
 .B "portfolio list \-\-class \fINAME\fR"
 Learner Portfolio entries with their tags.

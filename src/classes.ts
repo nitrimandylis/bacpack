@@ -4,10 +4,12 @@
 // for any class tested on 2026-08-01, so it is either hydrated by JavaScript
 // or unused here. A command that always returns nothing is worse than none.
 
-import { get, stripTags } from "./client.ts";
+import { mkdirSync, writeFileSync, existsSync } from "node:fs";
+import { join } from "node:path";
+import { get, stripTags, decodeEntities } from "./client.ts";
 
 export type Unit = { id: string; title: string; status: string; badges: string[] };
-export type ClassFile = { name: string; href: string; folder: boolean };
+export type ClassFile = { name: string; folder: string; size: number; url: string };
 export type Discussion = { id: string; title: string };
 
 export async function listUnits(classId: string): Promise<Unit[]> {
@@ -28,21 +30,80 @@ export async function listUnits(classId: string): Promise<Unit[]> {
   return units;
 }
 
-export async function listFiles(classId: string): Promise<ClassFile[]> {
-  const html = await get(`/student/classes/${classId}/files`);
-  const rows = html.split("<div class='row file").slice(1);
-  const files: ClassFile[] = [];
+// Every file row carries its whole record in one data-ec3-info attribute:
+// name, size, and a pre-signed CDN download_url that needs no cookie. So a
+// folder page is one request and no per-file link resolution.
+type Ec3Info = { download_url?: string; name?: string; file_size?: number };
 
-  for (const row of rows) {
-    const link = row.match(/href="(\/student\/classes\/\d+\/files\/[^"]+)"[^>]*>([\s\S]*?)<\/a>/);
-    if (!link) continue;
-    files.push({
-      name: stripTags(link[2]),
-      href: link[1],
-      folder: link[1].includes("/folder/"),
-    });
+export function assetsOn(html: string, folder: string): ClassFile[] {
+  const files: ClassFile[] = [];
+  const seen = new Set<string>();
+
+  for (const match of html.matchAll(/data-ec3-info='([^']+)'/g)) {
+    const info = JSON.parse(decodeEntities(match[1])) as Ec3Info;
+    if (!info.download_url || !info.name || seen.has(info.download_url)) continue;
+    seen.add(info.download_url);
+    files.push({ name: info.name, folder, size: info.file_size ?? 0, url: info.download_url });
   }
   return files;
+}
+
+// Folders are one level deep. Loose files at the top level link straight to
+// the CDN, so matching only /student/classes/ hrefs would miss them entirely.
+export async function listFiles(classId: string): Promise<ClassFile[]> {
+  const root = await get(`/student/classes/${classId}/files`);
+  const files = assetsOn(root, "");
+  const seenFolders = new Set<string>();
+
+  for (const match of root.matchAll(
+    /href="\/student\/classes\/\d+\/files\/folder\/(\d+)"[^>]*>([\s\S]*?)<\/a>/g,
+  )) {
+    const [, id, label] = match;
+    const name = stripTags(label);
+    if (!name || seenFolders.has(id)) continue;
+    seenFolders.add(id);
+    files.push(...assetsOn(await get(`/student/classes/${classId}/files/folder/${id}`), name));
+  }
+  return files;
+}
+
+// Slashes in a ManageBac file or folder name would silently write outside the
+// target directory.
+function safeName(name: string): string {
+  return name.replace(/[/\\]/g, "-").trim() || "untitled";
+}
+
+// A folder really can hold two different files under one name: Modern Greek A
+// has two distinct "Annotated_Script.pdf" in paper 1. Number the later ones
+// rather than let one overwrite or mask the other. Listing order is stable, so
+// the same file keeps the same number across runs.
+function uniqueTarget(path: string, taken: Set<string>): string {
+  if (!taken.has(path)) return path;
+  const dot = path.lastIndexOf(".");
+  const [stem, ext] = dot > 0 ? [path.slice(0, dot), path.slice(dot)] : [path, ""];
+  let n = 2;
+  while (taken.has(`${stem}-${n}${ext}`)) n++;
+  return `${stem}-${n}${ext}`;
+}
+
+// Skips what is already on disk, so an interrupted run resumes by rerunning.
+export async function download(files: ClassFile[], dir: string): Promise<string[]> {
+  const written: string[] = [];
+  const taken = new Set<string>();
+
+  for (const file of files) {
+    const target = uniqueTarget(join(dir, safeName(file.folder), safeName(file.name)), taken);
+    taken.add(target);
+    if (existsSync(target)) continue;
+    const response = await fetch(file.url);
+    if (!response.ok) {
+      throw new Error(`${file.name} failed to download (${response.status}). Links expire, re-list.`);
+    }
+    mkdirSync(join(dir, safeName(file.folder)), { recursive: true });
+    writeFileSync(target, Buffer.from(await response.arrayBuffer()));
+    written.push(target);
+  }
+  return written;
 }
 
 export async function listDiscussions(classId: string): Promise<Discussion[]> {
