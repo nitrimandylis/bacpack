@@ -92,14 +92,16 @@ export async function download(files: ClassFile[], dir: string): Promise<string[
   const taken = new Set<string>();
 
   for (const file of files) {
-    const target = uniqueTarget(join(dir, safeName(file.folder), safeName(file.name)), taken);
+    // Loose files sit at the top of the class, not in a folder named "".
+    const folderDir = file.folder ? join(dir, safeName(file.folder)) : dir;
+    const target = uniqueTarget(join(folderDir, safeName(file.name)), taken);
     taken.add(target);
     if (existsSync(target)) continue;
     const response = await fetch(file.url);
     if (!response.ok) {
       throw new Error(`${file.name} failed to download (${response.status}). Links expire, re-list.`);
     }
-    mkdirSync(join(dir, safeName(file.folder)), { recursive: true });
+    mkdirSync(folderDir, { recursive: true });
     writeFileSync(target, Buffer.from(await response.arrayBuffer()));
     written.push(target);
   }
