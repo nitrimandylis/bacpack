@@ -68,12 +68,13 @@ Add a reflection. Body only: the form carries no other usable field.
 .B "class units|files|discussions \-\-class \fINAME\fR"
 Unit plans, every file in the class, or discussion threads.
 .TP
-.B "class files \-\-class \fINAME\fB \-\-download \fIDIR\fR"
-Save every file under \fIDIR/<class name>/<folder>/\fR, keeping the folder
-layout. Files already on disk are skipped, so an interrupted run resumes by
-running it again. One ManageBac folder can hold two different files under the
-same name, so later ones are numbered \fIname\-2.pdf\fR rather than
-overwriting. No \fB\-\-confirm\fR: this writes to your disk, not to ManageBac.
+.B "class files \-\-class \fINAME\fB [\-\-match \fITEXT\fB] \-\-download \fIDIR\fR"
+Save the files under \fIDIR/<class name>/<folder>/\fR, keeping the folder
+layout, or all of them if \fB\-\-match\fR is omitted. Files already on disk are
+skipped, so an interrupted run resumes by running it again. One ManageBac
+folder can hold two different files under the same name, so later ones are
+numbered \fIname\-2.pdf\fR rather than overwriting. No \fB\-\-confirm\fR: this
+writes to your disk, not to ManageBac.
 .TP
 .B "portfolio list \-\-class \fINAME\fR"
 Learner Portfolio entries with their tags.
@@ -108,6 +109,12 @@ class exposes the portfolio route, so a name is both safer and shorter.
 .TP
 .BI \-\-days " N"
 Limit \fBdue\fR to the next N days.
+.TP
+.BI \-\-match " TEXT"
+On \fBclass files\fR, keep only the files whose \fIfolder/name\fR contains
+\fITEXT\fR, case-insensitively. One flag for both a folder and a filename:
+\fB\-\-match "paper 2"\fR or \fB\-\-match annotated\fR. Matching nothing is an
+error, not an empty result.
 .TP
 .BI \-\-download " DIR"
 On \fBclass files\fR, save every file under \fIDIR\fR instead of listing them.

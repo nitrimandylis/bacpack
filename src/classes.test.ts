@@ -3,7 +3,7 @@
 // trimmed from a real /files/folder page.
 
 import { test, expect } from "bun:test";
-import { assetsOn, safeName } from "./classes.ts";
+import { assetsOn, safeName, matching } from "./classes.ts";
 
 const ROW = (id: string, name: string, size: number) =>
   `<div class='row file px-4' data-ec3-info='{&quot;download_url&quot;:` +
@@ -37,4 +37,19 @@ test("a name cannot walk out of the download directory", () => {
   expect(safeName("/etc/passwd")).toBe("-etc-passwd");
   // Leading dots are only a problem when that is the whole name.
   expect(safeName("..hidden.pdf")).toBe("..hidden.pdf");
+});
+
+test("--match takes a folder, a file, or part of either", () => {
+  const files = [
+    { name: "Annotated_Script.pdf", folder: "paper 1", size: 1, url: "u1" },
+    { name: "Sample_D.pdf", folder: "paper 2", size: 1, url: "u2" },
+    { name: "reading_log_en.pdf", folder: "", size: 1, url: "u3" },
+  ];
+
+  expect(matching(files, "paper 2").map((f) => f.name)).toEqual(["Sample_D.pdf"]);
+  expect(matching(files, "annotated").map((f) => f.name)).toEqual(["Annotated_Script.pdf"]);
+  expect(matching(files, "paper").length).toBe(2);
+  // A loose file has no folder, so "folder/name" must still match on the name.
+  expect(matching(files, "reading").map((f) => f.name)).toEqual(["reading_log_en.pdf"]);
+  expect(matching(files, "nope")).toEqual([]);
 });

@@ -9,7 +9,8 @@ route for a student.
 
 Reads are live. Nothing is mirrored locally, so nothing can go stale. The one exception is
 `class files --download`, which saves files to a directory you name, because a PDF you cannot
-open offline is not much of a read.
+open offline is not much of a read. `--match` narrows it to one folder or one handout, since a
+whole class runs to hundreds of megabytes.
 
 ## Why it exists
 
@@ -61,6 +62,6 @@ unbuilt, absent.
 ## Status
 
 Every command has been exercised against a live account, including the writes and a full 67-file
-download. Zero runtime dependencies, 18 tests over the parts with real logic (year inference,
+download. Zero runtime dependencies, 19 tests over the parts with real logic (year inference,
 duplicate deadlines, label resolution across punctuation differences, and the file rows, whose
 JSON arrives double-escaped inside an HTML attribute).

@@ -39,7 +39,9 @@ bacpack cas list [--json]               # experiences with hours, badges, reflec
 bacpack cas outcomes                    # the 7 learning outcomes and their ids
 bacpack cas groups
 bacpack class units|files|discussions --class NAME [--json]
-bacpack class files --class NAME --download DIR   # every file, to DIR/<class>/<folder>/
+bacpack class files --class NAME [--match TEXT] [--download DIR]
+                                        # --match "paper 2" or --match annotated narrows it
+                                        # --download saves to DIR/<class>/<folder>/
 bacpack portfolio list --class NAME [--json]
 bacpack portfolio tags --class NAME     # live works + the whole tag taxonomy
 ```
@@ -89,6 +91,9 @@ bacpack portfolio star|delete --class NAME --id N [--confirm]
   still the one read that can be large: a single class ran to 67 files and 235 MB. Agree the
   directory with the user first. It skips what is already there, so a failed run is resumed by
   running the same command again, not by clearing the directory.
+- **Reach for `--match` before downloading a whole class.** The user usually wants one folder or
+  one handout, not 235 MB. List first without `--download` to confirm the needle hits what they
+  meant, then add the directory. A needle that matches nothing exits non-zero.
 
 ## What it cannot do
 

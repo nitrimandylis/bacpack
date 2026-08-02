@@ -51,7 +51,7 @@ nick@bacpack:~$ bacpack due --days 14
 | 08 | **`cas delete`** | removes one, after showing you its hours and reflection count |
 | 09 | **`cas reflect`** | adds a reflection to an experience, found by name. body only — see below |
 | 10 | **`class units`** | unit plans with their status and HL/SL badges |
-| 11 | **`class files`** | every file in the class, folder by folder. `--download DIR` saves them all |
+| 11 | **`class files`** | every file in the class, folder by folder. `--match` narrows, `--download DIR` saves |
 | 12 | **`class discussions`** | discussion threads with their ids |
 | 13 | **`portfolio list`** | portfolio entries with their tags and the first lines of each body |
 | 14 | **`portfolio tags`** | the works and the whole IB tag taxonomy, grouped. works change every September |
@@ -68,7 +68,7 @@ Two ManageBac quirks worth knowing. A CAS group can only be set when the experie
 
 `cas reflect` takes a body and nothing else. The create form carries no learning-outcome checkboxes, and an `evidence[url]` value posts cleanly and then appears nowhere. Both were tested live and silently dropped, so there are no flags for them — a flag that previews confidently and changes nothing is worse than a missing feature.
 
-`class files --download DIR` is the one write that needs no `--confirm`, because it writes to your disk and not to ManageBac. It rebuilds the class folder layout under `DIR/<class name>/`, skips anything already on disk so an interrupted run resumes by running it again, and numbers collisions rather than overwriting: a folder really can hold two different files under one name. Modern Greek A comes to 67 files and 235 MB, so it is not a small command.
+`class files --download DIR` is the one write that needs no `--confirm`, because it writes to your disk and not to ManageBac. It rebuilds the class folder layout under `DIR/<class name>/`, skips anything already on disk so an interrupted run resumes by running it again, and numbers collisions rather than overwriting: a folder really can hold two different files under one name. Modern Greek A comes to 67 files and 235 MB, so it is not a small command: `--match "paper 2"` narrows it to one folder, `--match annotated` to one kind of file. The needle is tested against `folder/name`, so a single flag does both, and a needle that matches nothing is an error rather than a quiet empty download.
 
 `--class` takes part of a class name, not an id: `--class greek`. Ids change each school year, and every class exposes the portfolio route, so a name is both safer and shorter than the number.
 
@@ -97,7 +97,7 @@ To find the cookie: log in to ManageBac, open devtools, Application → Cookies 
 
 ```bash
 bacpack due
-bacpack class files --class greek --download ~/Downloads
+bacpack class files --class greek --match "paper 2" --download ~/Downloads
 bacpack portfolio add --class greek --body-file entry.html --tags culture
 man bacpack        # full reference, offline
 ```

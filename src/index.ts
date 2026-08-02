@@ -33,7 +33,7 @@ const HELP = `bacpack - ManageBac from the terminal
     --supervisor-name/-title/-email/-phone TEXT
 
   bacpack class units --class NAME [--json]
-  bacpack class files --class NAME [--json] [--download DIR]
+  bacpack class files --class NAME [--json] [--match TEXT] [--download DIR]
   bacpack class discussions --class NAME [--json]
 
   bacpack portfolio list --class NAME [--json]
@@ -46,6 +46,7 @@ const HELP = `bacpack - ManageBac from the terminal
   bacpack portfolio delete --class NAME --id N [--confirm]
 
 --class takes part of a class name, not an id, e.g. --class greek
+--match takes part of a folder or file name, e.g. --match "paper 2"
 Writes preview and exit without sending. Add --confirm to actually post.
 
 Needs MANAGEBAC_SCHOOL (your subdomain) and ~/.config/managebac/cookie
@@ -60,6 +61,7 @@ const { values, positionals } = parseArgs({
     days: { type: "string" },
     class: { type: "string" },
     download: { type: "string" },
+    match: { type: "string" },
     confirm: { type: "boolean" },
     name: { type: "string" },
     start: { type: "string" },
@@ -340,7 +342,16 @@ async function main(): Promise<void> {
       return;
     }
     if (sub === "files") {
-      const files = await classes.listFiles(klass.id);
+      const all = await classes.listFiles(klass.id);
+      const files = values.match ? classes.matching(all, values.match) : all;
+      // Downloading nothing because a needle was a typo must not look like a
+      // class with no files.
+      if (values.match && files.length === 0) {
+        throw new Error(
+          `Nothing in ${klass.name} matches "${values.match}".\n` +
+            `Run without --match to see what is there.`,
+        );
+      }
       const dir = values.download;
       if (!dir) {
         print(files, files.map((f) => `${(f.folder || ".").padEnd(20)}  ${f.name}`));

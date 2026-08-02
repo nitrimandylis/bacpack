@@ -67,6 +67,14 @@ export async function listFiles(classId: string): Promise<ClassFile[]> {
   return files;
 }
 
+// One filter covers both "just the paper 2 folder" and "just the annotated
+// scripts", because the needle is tested against "folder/name". Substring and
+// case-insensitive, the same way --class already resolves a class.
+export function matching(files: ClassFile[], needle: string): ClassFile[] {
+  const query = needle.toLowerCase();
+  return files.filter((file) => `${file.folder}/${file.name}`.toLowerCase().includes(query));
+}
+
 // A ManageBac file or folder name is remote input on the way to a filesystem
 // path. Strip separators, then reject an all-dots name: with no separator
 // left, ".." is the only remaining string that can walk out of the target.
