@@ -1,4 +1,4 @@
-.TH BACPACK 1 "2026-08-01" "bacpack 0.1.0" "User Commands"
+.TH BACPACK 1 "2026-08-02" "bacpack 0.1.0" "User Commands"
 .SH NAME
 bacpack \- read and write ManageBac from the terminal
 .SH SYNOPSIS
@@ -62,17 +62,18 @@ Change one. Anything not passed keeps its current value.
 .B "cas delete \-\-experience \fINAME\fR"
 Remove one, after showing its hours and reflection count.
 .TP
-.B "cas reflect \-\-experience \fINAME\fR \-\-body\-file \fIFILE\fR"
+.B "cas reflect \-\-experience \fINAME\fB \-\-body\-file \fIFILE\fR"
 Add a reflection. Body only: the form carries no other usable field.
 .TP
 .B "class units|files|discussions \-\-class \fINAME\fR"
 Unit plans, every file in the class, or discussion threads.
 .TP
-.B "class files \-\-class \fINAME\fR \-\-download \fIDIR\fR"
+.B "class files \-\-class \fINAME\fB \-\-download \fIDIR\fR"
 Save every file under \fIDIR/<class name>/<folder>/\fR, keeping the folder
 layout. Files already on disk are skipped, so an interrupted run resumes by
-running it again. No \fB\-\-confirm\fR: this writes to your disk, not to
-ManageBac.
+running it again. One ManageBac folder can hold two different files under the
+same name, so later ones are numbered \fIname\-2.pdf\fR rather than
+overwriting. No \fB\-\-confirm\fR: this writes to your disk, not to ManageBac.
 .TP
 .B "portfolio list \-\-class \fINAME\fR"
 Learner Portfolio entries with their tags.
@@ -81,13 +82,13 @@ Learner Portfolio entries with their tags.
 The works and the full tag taxonomy, grouped by category. Works change every
 September.
 .TP
-.B "portfolio add \-\-class \fINAME\fR \-\-body\-file \fIFILE\fR"
+.B "portfolio add \-\-class \fINAME\fB \-\-body\-file \fIFILE\fR"
 Add an entry. There is no title field; fold the title into the body HTML.
 .TP
-.B "portfolio edit \-\-class \fINAME\fR \-\-id \fIN\fR"
+.B "portfolio edit \-\-class \fINAME\fB \-\-id \fIN\fR"
 Change an entry. Anything not passed keeps its current value.
 .TP
-.B "portfolio star|delete \-\-class \fINAME\fR \-\-id \fIN\fR"
+.B "portfolio star|delete \-\-class \fINAME\fB \-\-id \fIN\fR"
 Toggle the star, or remove the entry.
 .SH OPTIONS
 .TP
