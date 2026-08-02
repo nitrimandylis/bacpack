@@ -68,6 +68,8 @@ Two ManageBac quirks worth knowing. A CAS group can only be set when the experie
 
 `cas reflect` takes a body and nothing else. The create form carries no learning-outcome checkboxes, and an `evidence[url]` value posts cleanly and then appears nowhere. Both were tested live and silently dropped, so there are no flags for them — a flag that previews confidently and changes nothing is worse than a missing feature.
 
+`class files --download DIR` is the one write that needs no `--confirm`, because it writes to your disk and not to ManageBac. It rebuilds the class folder layout under `DIR/<class name>/`, skips anything already on disk so an interrupted run resumes by running it again, and numbers collisions rather than overwriting: a folder really can hold two different files under one name. Modern Greek A comes to 67 files and 235 MB, so it is not a small command.
+
 `--class` takes part of a class name, not an id: `--class greek`. Ids change each school year, and every class exposes the portfolio route, so a name is both safer and shorter than the number.
 
 ## 🚀 Run it
@@ -95,11 +97,12 @@ To find the cookie: log in to ManageBac, open devtools, Application → Cookies 
 
 ```bash
 bacpack due
+bacpack class files --class greek --download ~/Downloads
 bacpack portfolio add --class greek --body-file entry.html --tags culture
 man bacpack        # full reference, offline
 ```
 
-The second one prints what it would send and stops. Add `--confirm` when you mean it.
+The last write prints what it would send and stops. Add `--confirm` when you mean it.
 
 ## 🤖 Driving it with an agent
 
@@ -118,13 +121,16 @@ cp -R bacpack-cli ~/.claude/skills/     # or wherever yours looks
 ```mermaid
 flowchart LR
     A[cookie file] --> B[client.ts]
-    B -->|carries Set-Cookie forward| B
+    B -->|Accept: text/html, retry| B
     B --> C[due.ts]
     B --> D[cas.ts]
     B --> E[portfolio.ts]
+    B --> I[classes.ts]
     C --> F[index.ts]
     D --> F
     E --> F
+    I --> F
+    I -->|signed CDN links| J[your disk]
     F -->|preview| G[stdout]
     F -->|--confirm| H[ManageBac]
 ```
@@ -135,6 +141,7 @@ flowchart LR
 | due | `src/due.ts` | year inference, dedupe, and the guard that shouts when the selectors rot instead of reporting nothing due |
 | cas | `src/cas.ts` | experiences and the create form, including the advisor-email checkbox that ships pre-ticked |
 | portfolio | `src/portfolio.ts` | reflections, the tag taxonomy, and the create form that has no title field |
+| classes | `src/classes.ts` | units, discussions, and the file tree — including the download, which reads each row's signed CDN link straight out of the markup |
 | cli | `src/index.ts` | argument parsing and the preview that stands between you and a permanent record |
 
 Three failure modes are handled by name, because all three have happened. `401` means the cookie died, so it says so and stops. `422` means Rails refused the request format, which the `Accept` header prevents and the retry loop covers. `200` with nothing parseable means ManageBac changed its markup, so it exits non-zero rather than telling you your week is clear.

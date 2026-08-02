@@ -5,15 +5,16 @@ bacpack \- read and write ManageBac from the terminal
 .B bacpack
 [\fIcommand\fR] [\fIsubcommand\fR] [\fIoptions\fR]
 .SH DESCRIPTION
-Reads a student's own ManageBac pages over an ordinary session cookie, and
-writes the two
+Reads a student's own ManageBac pages over an ordinary session cookie,
+downloads a class's files, and writes the two
 plain text forms ManageBac exposes: CAS experiences and Learner Portfolio
 entries.
 The official ManageBac+ API is administrator-only, so this drives the web
 interface instead.
 .PP
-Reads are live and nothing is cached. Every write prints a preview and exits
-without sending;
+Reads are live and nothing is cached, except for files you ask
+.B \-\-download
+to save. Every write prints a preview and exits without sending;
 .B \-\-confirm
 is what actually posts.
 .SH ENVIRONMENT
@@ -106,6 +107,10 @@ class exposes the portfolio route, so a name is both safer and shorter.
 .TP
 .BI \-\-days " N"
 Limit \fBdue\fR to the next N days.
+.TP
+.BI \-\-download " DIR"
+On \fBclass files\fR, save every file under \fIDIR\fR instead of listing them.
+Takes no \fB\-\-confirm\fR: it writes to your disk, not to ManageBac.
 .TP
 .BI \-\-creativity " H" ", " \-\-action " H" ", " \-\-service " H"
 Hours per CAS strand.

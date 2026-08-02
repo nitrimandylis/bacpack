@@ -1,6 +1,6 @@
 ---
 name: bacpack-cli
-description: Drive ManageBac from the terminal via the bacpack CLI — check what is due, log CAS experiences and reflections, and write Learner Portfolio entries. Use whenever the user asks what is due or overdue, mentions CAS hours or reflections, the Learner Portfolio or IA tab, wants coursework pushed into ManageBac, or names ManageBac at all.
+description: Drive ManageBac from the terminal via the bacpack CLI — check what is due, download a class's files, log CAS experiences and reflections, and write Learner Portfolio entries. Use whenever the user asks what is due or overdue, wants the handouts or resources from a class, mentions CAS hours or reflections, the Learner Portfolio or IA tab, wants coursework pushed into ManageBac, or names ManageBac at all.
 ---
 
 # bacpack
@@ -39,7 +39,7 @@ bacpack cas list [--json]               # experiences with hours, badges, reflec
 bacpack cas outcomes                    # the 7 learning outcomes and their ids
 bacpack cas groups
 bacpack class units|files|discussions --class NAME [--json]
-bacpack class files --class NAME --download DIR   # saves every file, resumable, no --confirm
+bacpack class files --class NAME --download DIR   # every file, to DIR/<class>/<folder>/
 bacpack portfolio list --class NAME [--json]
 bacpack portfolio tags --class NAME     # live works + the whole tag taxonomy
 ```
@@ -85,8 +85,13 @@ bacpack portfolio star|delete --class NAME --id N [--confirm]
   even when its commas differ. If a bare label is ambiguous, qualify it: `Concepts/Culture`.
 - **A `200` with nothing parseable exits non-zero.** That means ManageBac changed its markup, not
   that the user has nothing due. Report it as breakage, never as an empty week.
+- **`--download` takes no `--confirm`, because it writes to disk and not to ManageBac.** It is
+  still the one read that can be large: a single class ran to 67 files and 235 MB. Agree the
+  directory with the user first. It skips what is already there, so a failed run is resumed by
+  running the same command again, not by clearing the directory.
 
 ## What it cannot do
 
-Submitting coursework, uploading any file, and anything involving grades. **ManageBac exposes no
-grades or report-card endpoint at all to a student session**, so never offer to fetch them.
+Submitting coursework, uploading a file anywhere, and anything involving grades. Files move one
+way only: `class files --download` pulls, nothing pushes. **ManageBac exposes no grades or
+report-card endpoint at all to a student session**, so never offer to fetch them.

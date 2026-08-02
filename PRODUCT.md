@@ -2,11 +2,14 @@
 
 ## What it is
 
-A CLI over ManageBac for students. It answers "what's due", logs CAS experiences and reflections,
-and writes Learner Portfolio entries, using the session cookie the browser already holds. The
-official ManageBac+ API is administrator-only, so there is no supported route for a student.
+A CLI over ManageBac for students. It answers "what's due", downloads a class's files, logs CAS
+experiences and reflections, and writes Learner Portfolio entries, using the session cookie the
+browser already holds. The official ManageBac+ API is administrator-only, so there is no supported
+route for a student.
 
-Reads are live. Nothing is mirrored locally, so nothing can go stale.
+Reads are live. Nothing is mirrored locally, so nothing can go stale. The one exception is
+`class files --download`, which saves files to a directory you name, because a PDF you cannot
+open offline is not much of a read.
 
 ## Why it exists
 
@@ -45,7 +48,9 @@ Nothing is committed. Candidates, roughly in order of usefulness:
   the information reaches you rather than adding a command to remember.
 - **Coursework submission.** The biggest gap: deadlines say "Submit Coursework" and bacpack can
   show the button but not press it. Multipart upload, a real build.
-- **File attachments** on CAS reflections and portfolio entries. Same multipart problem.
+- **Uploading attachments** to CAS reflections and portfolio entries. Same multipart problem.
+  Downloading is done: files carry a signed CDN link in the row markup, so pulling them needs no
+  upload machinery at all.
 - **`portfolio pdf`**, since ManageBac already renders one server-side.
 - **`class_stream`**, only if it turns out to be server-rendered somewhere. It returns no items in
   the page source for any class tested.
@@ -55,6 +60,7 @@ unbuilt, absent.
 
 ## Status
 
-Every command has been exercised against a live account, including the writes. Zero runtime
-dependencies, 15 tests over the parts with real logic (year inference, duplicate deadlines, label
-resolution across punctuation differences).
+Every command has been exercised against a live account, including the writes and a full 67-file
+download. Zero runtime dependencies, 18 tests over the parts with real logic (year inference,
+duplicate deadlines, label resolution across punctuation differences, and the file rows, whose
+JSON arrives double-escaped inside an HTML attribute).
