@@ -85,6 +85,12 @@ bacpack portfolio star|delete --class NAME --id N [--confirm]
   `bacpack portfolio tags` rather than guessing.
 - **Tag punctuation is flattened before matching**, so a value copied from another system resolves
   even when its commas differ. If a bare label is ambiguous, qualify it: `Concepts/Culture`.
+- **`class discussions` returns the newest five posts.** ManageBac paginates behind a "Show More"
+  button whose route is not mapped, so an older post is unreachable rather than absent. Say so
+  instead of reporting that the class has posted nothing.
+- **The homework is in the discussion body, not the title.** Each post carries its date, category,
+  author and body, and the body keeps its line breaks because teachers list the exercises one to a
+  line. Parse `--json` and read `body`; the plain output is formatted for a human to read.
 - **A `200` with nothing parseable exits non-zero.** That means ManageBac changed its markup, not
   that the user has nothing due. Report it as breakage, never as an empty week.
 - **`--download` takes no `--confirm`, because it writes to disk and not to ManageBac.** It is

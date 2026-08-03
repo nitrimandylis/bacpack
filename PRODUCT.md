@@ -62,6 +62,7 @@ unbuilt, absent.
 ## Status
 
 Every command has been exercised against a live account, including the writes and a full 67-file
-download. Zero runtime dependencies, 19 tests over the parts with real logic (year inference,
-duplicate deadlines, label resolution across punctuation differences, and the file rows, whose
-JSON arrives double-escaped inside an HTML attribute).
+download. Zero runtime dependencies, 22 tests over the parts with real logic (year inference,
+duplicate deadlines, label resolution across punctuation differences, the file rows, whose
+JSON arrives double-escaped inside an HTML attribute, and discussion posts, which sit in sibling
+divs with no per-post wrapper).

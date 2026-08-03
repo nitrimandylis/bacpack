@@ -1,4 +1,4 @@
-.TH BACPACK 1 "2026-08-02" "bacpack 0.1.0" "User Commands"
+.TH BACPACK 1 "2026-08-03" "bacpack 0.1.0" "User Commands"
 .SH NAME
 bacpack \- read and write ManageBac from the terminal
 .SH SYNOPSIS
@@ -66,7 +66,10 @@ Remove one, after showing its hours and reflection count.
 Add a reflection. Body only: the form carries no other usable field.
 .TP
 .B "class units|files|discussions \-\-class \fINAME\fR"
-Unit plans, every file in the class, or discussion threads.
+Unit plans, every file in the class, or discussion posts. A discussion carries
+its date, category, author and body, and the body keeps its line breaks because
+that is how teachers list exercises. Only the first page is read, which is five
+posts: the rest sits behind a \fIShow More\fR button whose route is not mapped.
 .TP
 .B "class files \-\-class \fINAME\fB [\-\-match \fITEXT\fB] \-\-download \fIDIR\fR"
 Save the files under \fIDIR/<class name>/<folder>/\fR, keeping the folder
