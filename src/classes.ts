@@ -10,7 +10,16 @@ import { get, stripTags, decodeEntities } from "./client.ts";
 
 export type Unit = { id: string; title: string; status: string; badges: string[] };
 export type ClassFile = { name: string; folder: string; size: number; url: string };
-export type Discussion = { id: string; title: string };
+export type Discussion = {
+  id: string;
+  title: string;
+  author: string;
+  category: string | null; // teachers fill this in inconsistently, often not at all
+  postedAt: Date | null;
+  posted: string; // exactly as ManageBac printed it
+  body: string;
+  url: string;
+};
 
 export async function listUnits(classId: string): Promise<Unit[]> {
   const html = await get(`/student/classes/${classId}/units`);
@@ -117,15 +126,83 @@ export async function download(files: ClassFile[], dir: string): Promise<string[
   return written;
 }
 
+// Discussion dates carry their year ("Wednesday, Jun 10, 2026 at 10:38 PM"),
+// unlike Tasks & Deadlines, so nothing has to be inferred here.
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+export function parsePosted(text: string): Date | null {
+  const match = text.match(/([A-Z][a-z]{2}) (\d{1,2}), (\d{4}) at (\d{1,2}):(\d{2})\s*(AM|PM)/);
+  if (!match) return null;
+  const month = MONTHS.indexOf(match[1]);
+  if (month < 0) return null;
+  let hour = Number(match[4]) % 12;
+  if (match[6] === "PM") hour += 12;
+  return new Date(Number(match[3]), month, Number(match[2]), hour, Number(match[5]));
+}
+
+// stripTags collapses every run of whitespace, which turns a multi-paragraph
+// homework post into one long line. Discussion bodies are the one place in
+// ManageBac where the line breaks carry meaning, because that is how teachers
+// list the exercises.
+export function blockText(html: string): string {
+  const spaced = html
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|div|li|h[1-6]|tr)>/gi, "\n");
+  return decodeEntities(spaced.replace(/<[^>]+>/g, ""))
+    .split("\n")
+    .map((line) => line.replace(/[ \t\u00a0]+/g, " ").trim())
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+// One post per div#discussion_{id}. Splitting on that marker rather than
+// matching a single regex over the whole page keeps each post's fields from
+// being read off its neighbour.
+export function parseDiscussions(html: string, classId: string): Discussion[] {
+  const posts: Discussion[] = [];
+
+  for (const block of html.split(/<div id="discussion_/).slice(1)) {
+    const id = block.slice(0, block.indexOf('"'));
+    if (!/^\d+$/.test(id)) continue;
+
+    const title = block.match(/class='h4 title'[^>]*>([\s\S]*?)<\/div>/);
+    const author = block.match(/<strong aria-hidden='true'>([^<]*)<\/strong>/);
+    const category = block.match(/class='category'>[\s\S]*?<em>([^<]*)<\/em>/);
+    const posted = block.match(/class='date gray-text'>\s*Posted on\s*([^<]+)</);
+
+    // The body runs to the replies container, which is the one element that
+    // always closes it. Counting nested divs would be the alternative. Both
+    // boundaries sit at a tag edge, so slice past the '>' and stop before the
+    // '<' or the markup leaks into the text.
+    const opens = block.match(/<div class='body[^']*'>/);
+    const end = block.indexOf("<div class='replies'");
+    const from = opens ? block.indexOf(opens[0]) + opens[0].length : -1;
+    const region = from < 0 ? "" : block.slice(from, end < 0 ? undefined : end);
+    // The title renders inside the body container as well as in its own field.
+    const body = blockText(region.replace(/<div class='h4 title'[\s\S]*?<\/div>/, ""));
+
+    const postedText = posted ? posted[1].trim().replace(/\s+/g, " ") : "";
+    posts.push({
+      id,
+      title: title ? stripTags(title[1]) : "",
+      author: author ? author[1].trim() : "",
+      category: category ? category[1].trim() : null,
+      postedAt: parsePosted(postedText),
+      posted: postedText,
+      body,
+      url: `/student/classes/${classId}/discussions/${id}`,
+    });
+  }
+  return posts;
+}
+
+// Ceiling: the first page only, which is five posts. ManageBac paginates
+// behind a "Show More" button and the route for it is not mapped. At roughly
+// one post a week across every class this is weeks of headroom, but a class
+// that goes quiet for a term and then posts six times in a day would lose the
+// oldest of them.
 export async function listDiscussions(classId: string): Promise<Discussion[]> {
   const html = await get(`/student/classes/${classId}/discussions`);
-  const seen = new Map<string, string>();
-
-  for (const match of html.matchAll(
-    /href="\/student\/classes\/\d+\/discussions\/(\d+)"[^>]*>([\s\S]{0,200}?)<\/a>/g,
-  )) {
-    const title = stripTags(match[2]);
-    if (title && !seen.has(match[1])) seen.set(match[1], title);
-  }
-  return [...seen].map(([id, title]) => ({ id, title }));
+  return parseDiscussions(html, classId);
 }

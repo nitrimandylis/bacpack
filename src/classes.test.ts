@@ -3,7 +3,7 @@
 // trimmed from a real /files/folder page.
 
 import { test, expect } from "bun:test";
-import { assetsOn, safeName, matching } from "./classes.ts";
+import { assetsOn, safeName, matching, parseDiscussions, parsePosted } from "./classes.ts";
 
 const ROW = (id: string, name: string, size: number) =>
   `<div class='row file px-4' data-ec3-info='{&quot;download_url&quot;:` +
@@ -52,4 +52,52 @@ test("--match takes a folder, a file, or part of either", () => {
   // A loose file has no folder, so "folder/name" must still match on the name.
   expect(matching(files, "reading").map((f) => f.name)).toEqual(["reading_log_en.pdf"]);
   expect(matching(files, "nope")).toEqual([]);
+});
+
+// Discussion markup, trimmed from a real /discussions page with the names
+// replaced. The fields sit in sibling divs with no wrapper per post, so the
+// only thing separating one post from the next is the id marker.
+const POST = (id: string, category: string | null, body: string) =>
+  `<div id="discussion_${id}" class="discussion new-discussion">` +
+  `<div class='hstack gap-2 align-items-start discussion-inner'>` +
+  `<div class='author hstack gap-2 flex-wrap'>` +
+  `<strong aria-hidden='true'>A Teacher</strong>` +
+  (category ? `<span class='category'>\n in \n<em>${category}</em>\n</span>` : "") +
+  `</div>` +
+  `<div class='date gray-text'>\nPosted on\nTuesday, May 19, 2026 at 12:21 AM\n</div>` +
+  `<div class='body pt-3'>` +
+  `<div class='h4 title' data-translate-target='content'>Some title</div>` +
+  `<div class="redactor-styles fr-view">${body}</div>` +
+  `</div><div class='replies'></div></div></div>`;
+
+test("parseDiscussions reads each post's own fields, not its neighbour's", () => {
+  const posts = parseDiscussions(POST("2", "Homework", "<p>b</p>") + POST("1", null, "<p>a</p>"), "99");
+
+  expect(posts.map((p) => p.id)).toEqual(["2", "1"]);
+  expect(posts[0].category).toBe("Homework");
+  // Teachers leave the category blank more often than they fill it, so an
+  // absent one must stay null rather than inherit the post above.
+  expect(posts[1].category).toBe(null);
+  expect(posts[0].author).toBe("A Teacher");
+  expect(posts[0].url).toBe("/student/classes/99/discussions/2");
+});
+
+test("parsePosted takes the year off the page instead of inferring it", () => {
+  expect(parsePosted("Tuesday, May 19, 2026 at 12:21 AM")).toEqual(new Date(2026, 4, 19, 0, 21));
+  expect(parsePosted("Wednesday, Jun 10, 2026 at 10:38 PM")).toEqual(new Date(2026, 5, 10, 22, 38));
+  expect(parsePosted("Sep 20")).toBe(null);
+});
+
+test("the body keeps its line breaks and leaks no markup", () => {
+  const posts = parseDiscussions(
+    POST("1", "Homework", "<p>From Diff1:</p><p>Ex. 1, 2</p><p>and 7,&nbsp;9</p>"),
+    "99",
+  );
+
+  // The line breaks are how teachers list exercises, so they have to survive.
+  expect(posts[0].body).toBe("From Diff1:\nEx. 1, 2\nand 7, 9");
+  // The title has its own field and must not be repeated at the top of the body.
+  expect(posts[0].body).not.toContain("Some title");
+  expect(posts[0].body).not.toContain("<");
+  expect(posts[0].body).not.toContain("class=");
 });

@@ -365,7 +365,10 @@ async function main(): Promise<void> {
     }
     if (sub === "discussions") {
       const discussions = await classes.listDiscussions(klass.id);
-      print(discussions, discussions.map((d) => `${d.id}  ${d.title}`));
+      print(
+        discussions,
+        discussions.map((d) => `${d.posted}\n  ${d.category ?? "-"}  ${d.title}\n  ${d.body}\n`),
+      );
       return;
     }
   }
