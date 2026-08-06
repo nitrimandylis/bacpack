@@ -146,6 +146,60 @@ ambiguous label as
 Email the CAS advisor. Off unless passed. The ManageBac checkbox ships
 pre-ticked, so bacpack
 always sends the field explicitly.
+.SH JSON OUTPUT
+With
+.BR \-\-json ,
+stdout carries exactly one JSON value and nothing else; errors stay on stderr
+with a non-zero exit status, so consumers branch on the exit code rather than
+parsing the error. A read that legitimately finds nothing is an empty array,
+not an error.
+.TP
+.B due
+An array of
+.IR "{title, subject, when, due, badges, action, url}" .
+Teacher duplicates are kept rather than merged, so the same task can appear
+twice under different subjects.
+.TP
+.B classes
+An array of
+.IR "{id, name}" .
+Ids change each school year; match on
+.I name
+instead.
+.TP
+.B cas list
+An array of
+.IR "{id, name, badges, hours, reflections}" .
+.TP
+.B class units
+An array of
+.IR "{id, title, status, badges}" .
+.TP
+.B class files
+An array of
+.IR "{name, folder, size, url}" .
+The
+.I url
+is a pre-signed CDN link fetched fresh for this response and it expires, so
+download from it now rather than storing it.
+.TP
+.B class discussions
+An array of
+.IR "{id, title}" .
+.TP
+.B portfolio list
+An array of
+.IR "{id, date, tags, body}" .
+.I body
+is plain text, not the original HTML: it is for skimming, not for editing and
+sending back.
+.TP
+.B portfolio tags
+One object,
+.I works
+and
+.IR tags ,
+each an array of the values that class accepts.
 .SH EXIT STATUS
 Non-zero on a dead cookie, an unresolvable class or tag, or a page that parsed
 to nothing.
