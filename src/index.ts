@@ -47,6 +47,8 @@ const HELP = `bacpack - ManageBac from the terminal
 
 --class takes part of a class name, not an id, e.g. --class greek
 --match takes part of a folder or file name, e.g. --match "paper 2"
+--tags and --works take a comma-separated list, and repeat for a label that
+  contains a comma: --tags "Culture, identity and community" --tags "Identity"
 Writes preview and exit without sending. Add --confirm to actually post.
 
 Needs MANAGEBAC_SCHOOL (your subdomain) and ~/.config/managebac/cookie
@@ -74,8 +76,8 @@ const { values, positionals } = parseArgs({
     project: { type: "boolean" },
     "notify-advisor": { type: "boolean" },
     "body-file": { type: "string" },
-    tags: { type: "string" },
-    works: { type: "string" },
+    tags: { type: "string", multiple: true },
+    works: { type: "string", multiple: true },
     experience: { type: "string" },
     id: { type: "string" },
     "service-type": { type: "string" },
@@ -92,6 +94,14 @@ function required(flag: string): string {
   const value = values[flag as keyof typeof values];
   if (typeof value !== "string" || !value) throw new Error(`--${flag} is required.`);
   return value;
+}
+
+// Repeatable flags arrive as an array. Each occurrence is left unsplit, because
+// a label may contain a comma and only the resolver can tell a list from a name.
+function occurrences(flag: string): string[] {
+  const value = values[flag as keyof typeof values];
+  if (!Array.isArray(value)) return [];
+  return value.filter((part): part is string => typeof part === "string" && part.trim() !== "");
 }
 
 function commaList(flag: string): string[] {
@@ -395,8 +405,8 @@ async function main(): Promise<void> {
     if (sub === "add") {
       const body = readFile("body-file");
       const taxonomy = await portfolio.fetchTaxonomy(klass.id);
-      const tags = portfolio.resolveByLabel(commaList("tags"), taxonomy.tags, "tag");
-      const works = portfolio.resolveByLabel(commaList("works"), taxonomy.works, "work");
+      const tags = portfolio.resolveLabels(occurrences("tags"), taxonomy.tags, "tag");
+      const works = portfolio.resolveLabels(occurrences("works"), taxonomy.works, "work");
 
       const ok = previewed([
         ["class", klass.name],
@@ -420,10 +430,10 @@ async function main(): Promise<void> {
       // edit form overwrites every field it posts.
       const body = values["body-file"] ? readFile("body-file") : current.body;
       const tags = values.tags
-        ? portfolio.resolveByLabel(commaList("tags"), taxonomy.tags, "tag")
+        ? portfolio.resolveLabels(occurrences("tags"), taxonomy.tags, "tag")
         : portfolio.resolveByLabel(current.tagIds, taxonomy.tags, "tag");
       const works = values.works
-        ? portfolio.resolveByLabel(commaList("works"), taxonomy.works, "work")
+        ? portfolio.resolveLabels(occurrences("works"), taxonomy.works, "work")
         : portfolio.resolveByLabel(current.workIds, taxonomy.works, "work");
 
       const kept = (changed: boolean) => (changed ? "" : "  (unchanged)");

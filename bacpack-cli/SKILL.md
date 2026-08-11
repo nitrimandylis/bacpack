@@ -97,18 +97,23 @@ bacpack portfolio star|delete --class NAME --id N [--confirm]
   without ever printing it, and retry on 422. Apply the smallest possible string edit to what you
   read, assert the match count before replacing, then post and re-read to diff. Treat a body you
   could not read as a body you may not edit.
-- **Never pass a tag name containing a comma.** `--tags` is split on `,` *before* any matching
-  happens, so `"Culture, identity and community"` never reaches the matcher. It arrives as two
-  queries: `Culture`, which exact-matches `Concepts / Culture` and binds silently, and
-  `identity and community`, which substring-matches the Field you actually wanted. The result is a
-  wrong tag, a duplicate, and **exit code 0**. Punctuation *is* flattened, but only per fragment
-  and only after the split, so it cannot save a label whose comma is the delimiter.
-  Use the comma-free spelling instead: `Culture identity and community`, `Politics power and
-  justice`, `Beliefs values and education`. Notion cannot store a comma in a select option, so
-  values copied from Notion are already safe; values copied from ManageBac's own taxonomy or from
-  a `portfolio tags` listing are **not**.
-- **Always preview before `--confirm`, and read the tag line back.** It is the only thing that
-  catches the failure above, which is silent by construction.
+- **A label containing a comma needs its own `--tags` occurrence.** `--tags a,b` is still a list,
+  but each occurrence is now tried whole before it is split, so
+  `--tags "Culture, identity and community"` resolves to that one Field. Two such labels means
+  passing the flag twice; putting both in one string splits them into fragments again:
+
+  ```bash
+  --tags "Culture, identity and community" --tags "Politics, power and justice"   # right
+  --tags "Culture, identity and community,Politics, power and justice"            # wrong, 4 fragments
+  ```
+
+  The comma-free Notion spellings (`Culture identity and community`) resolve too, so values copied
+  from Notion stay safe either way.
+- **This was a silent-corruption bug before 2026-08-11.** Splitting happened first, so `Culture`
+  exact-matched `Concepts / Culture` and bound with **exit code 0**. If a portfolio entry has a
+  stray `Concepts/Culture` or a duplicated Field, it was posted by the old binary. Fixed in
+  `resolveLabels`, `src/portfolio.ts`.
+- **Always preview before `--confirm`, and read the tag line back** against the values you meant.
 - **If a bare label is ambiguous, qualify it** as `Concepts/Culture`. The `/` form is what previews
   print and is accepted back as input.
 - **`class discussions` returns the newest five posts.** ManageBac paginates behind a "Show More"

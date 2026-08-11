@@ -76,33 +76,46 @@ export function flatten(text: string): string {
     .trim();
 }
 
+const show = <T extends { label: string; category?: string }>(item: T) =>
+  item.category ? `${item.category} / ${item.label}` : item.label;
+
+// The single item a query names, or null when it names none or several.
+function findOne<T extends { id: string; label: string; category?: string }>(
+  query: string,
+  available: T[],
+): T | null {
+  // An exact id is accepted so scripts can pin a value.
+  const byId = available.find((item) => item.id === query);
+  if (byId) return byId;
+
+  const needle = flatten(query);
+
+  // Previews print "Category/Label", so accept that back as input rather
+  // than making the tool's own output invalid.
+  const qualified = available.filter((item) => flatten(show(item)) === needle);
+  if (qualified.length === 1) return qualified[0];
+
+  // An exact label wins outright, otherwise "Culture" is forever ambiguous
+  // against "Culture, identity and community".
+  const exact = available.filter((item) => flatten(item.label) === needle);
+  if (exact.length === 1) return exact[0];
+
+  const hits = available.filter((item) => flatten(item.label).includes(needle));
+  if (hits.length === 1) return hits[0];
+
+  return null;
+}
+
 export function resolveByLabel<T extends { id: string; label: string; category?: string }>(
   queries: string[],
   available: T[],
   kind: string,
 ): T[] {
-  const show = (item: T) => (item.category ? `${item.category} / ${item.label}` : item.label);
-
   return queries.map((query) => {
-    // An exact id is accepted so scripts can pin a value.
-    const byId = available.find((item) => item.id === query);
-    if (byId) return byId;
+    const found = findOne(query, available);
+    if (found) return found;
 
-    const needle = flatten(query);
-
-    // Previews print "Category/Label", so accept that back as input rather
-    // than making the tool's own output invalid.
-    const qualified = available.filter((item) => flatten(show(item)) === needle);
-    if (qualified.length === 1) return qualified[0];
-
-    // An exact label wins outright, otherwise "Culture" is forever ambiguous
-    // against "Culture, identity and community".
-    const exact = available.filter((item) => flatten(item.label) === needle);
-    if (exact.length === 1) return exact[0];
-
-    const hits = available.filter((item) => flatten(item.label).includes(needle));
-    if (hits.length === 1) return hits[0];
-
+    const hits = available.filter((item) => flatten(item.label).includes(flatten(query)));
     if (hits.length === 0) {
       throw new Error(
         `No ${kind} matches "${query}". Available:\n${available.map((i) => `  ${show(i)}`).join("\n")}`,
@@ -113,6 +126,33 @@ export function resolveByLabel<T extends { id: string; label: string; category?:
         hits.map((i) => `  ${show(i)}`).join("\n"),
     );
   });
+}
+
+// `--tags a,b` is a list, but a ManageBac label can itself contain a comma:
+// "Culture, identity and community". Splitting on the comma first turned that
+// one label into "Culture", which exact-matches Concepts/Culture and binds
+// silently, plus a fragment that matched the Field it came from. The result was
+// a wrong tag and a duplicate, with exit code 0.
+//
+// So try each occurrence whole before splitting it. A real list never resolves
+// as a single label, and a comma-carrying label always does. Pass the flag more
+// than once when several such labels are needed.
+export function resolveLabels<T extends { id: string; label: string; category?: string }>(
+  raw: string[],
+  available: T[],
+  kind: string,
+): T[] {
+  const out: T[] = [];
+  for (const occurrence of raw) {
+    const whole = findOne(occurrence, available);
+    if (whole) {
+      out.push(whole);
+      continue;
+    }
+    const parts = occurrence.split(",").map((part) => part.trim()).filter(Boolean);
+    out.push(...resolveByLabel(parts, available, kind));
+  }
+  return out;
 }
 
 export function buildForm(body: string, tags: Tag[], works: Work[], token: string): URLSearchParams {
