@@ -83,8 +83,34 @@ bacpack portfolio star|delete --class NAME --id N [--confirm]
 - **A CAS group can only be set at creation.** ManageBac's edit form has no group field.
 - **Works ids change every September.** If a `--works` value stops resolving, run
   `bacpack portfolio tags` rather than guessing.
-- **Tag punctuation is flattened before matching**, so a value copied from another system resolves
-  even when its commas differ. If a bare label is ambiguous, qualify it: `Concepts/Culture`.
+- **Never run `portfolio edit --body-file` on a body you have not read.** `edit` replaces the whole
+  body, and `portfolio list --json` truncates `body` to a ~200-character excerpt, so the CLI alone
+  gives you no way to see what you are about to destroy. There is no `portfolio show`. Read the
+  live body first, from the edit form's textarea:
+
+  ```
+  GET /student/classes/{classId}/learner_portfolio/reflections/{entryId}/edit
+  -> <textarea name="evidence[body]">…</textarea>     (HTML-unescape it)
+  ```
+
+  Send `Accept: text/html`, replay the cookie from `~/.config/managebac/cookie` on every request
+  without ever printing it, and retry on 422. Apply the smallest possible string edit to what you
+  read, assert the match count before replacing, then post and re-read to diff. Treat a body you
+  could not read as a body you may not edit.
+- **Never pass a tag name containing a comma.** `--tags` is split on `,` *before* any matching
+  happens, so `"Culture, identity and community"` never reaches the matcher. It arrives as two
+  queries: `Culture`, which exact-matches `Concepts / Culture` and binds silently, and
+  `identity and community`, which substring-matches the Field you actually wanted. The result is a
+  wrong tag, a duplicate, and **exit code 0**. Punctuation *is* flattened, but only per fragment
+  and only after the split, so it cannot save a label whose comma is the delimiter.
+  Use the comma-free spelling instead: `Culture identity and community`, `Politics power and
+  justice`, `Beliefs values and education`. Notion cannot store a comma in a select option, so
+  values copied from Notion are already safe; values copied from ManageBac's own taxonomy or from
+  a `portfolio tags` listing are **not**.
+- **Always preview before `--confirm`, and read the tag line back.** It is the only thing that
+  catches the failure above, which is silent by construction.
+- **If a bare label is ambiguous, qualify it** as `Concepts/Culture`. The `/` form is what previews
+  print and is accepted back as input.
 - **`class discussions` returns the newest five posts.** ManageBac paginates behind a "Show More"
   button whose route is not mapped, so an older post is unreachable rather than absent. Say so
   instead of reporting that the class has posted nothing.
