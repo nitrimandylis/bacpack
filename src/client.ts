@@ -6,7 +6,7 @@
 //   422            Rails refusing the request format, see ACCEPT below
 //   200 with nothing parseable  the selectors rotted, callers must shout
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
@@ -126,7 +126,16 @@ async function login(): Promise<string> {
     throw new Error("ManageBac rejected the login. Check the email and password.");
   }
 
-  writeFileSync(cookiePath(), fresh, { mode: 0o600 });
+  // Caching the session only saves the next run a login, so it must never be
+  // able to fail one that already worked. A CI runner has no ~/.config at all,
+  // which is the case that got this wrong first.
+  try {
+    mkdirSync(configDir(), { recursive: true });
+    writeFileSync(cookiePath(), fresh, { mode: 0o600 });
+  } catch {
+    // Not cached, so every run logs in. Correct, just chattier.
+  }
+
   loggedIn = true;
   return fresh;
 }
