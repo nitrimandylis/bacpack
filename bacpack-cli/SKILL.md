@@ -118,6 +118,11 @@ bacpack portfolio star|delete --class NAME --id N [--confirm]
 - **Always preview before `--confirm`, and read the tag line back** against the values you meant.
 - **If a bare label is ambiguous, qualify it** as `Concepts/Culture`. The `/` form is what previews
   print and is accepted back as input.
+- **`portfolio list` is complete, and was not before 2026-08-14.** The index paginates at ten
+  entries per page and the old binary read page one only, exiting 0 on a truncated list. It now
+  walks `.../reflections/page/N` until a page adds nothing new. A pre-fix run is why an older
+  entry can look missing from ManageBac when it is not: re-check with a current binary before
+  reporting a gap, and never conclude anything from ten entries exactly.
 - **`class discussions` returns the newest five posts.** ManageBac paginates behind a "Show More"
   button whose route is not mapped, so an older post is unreachable rather than absent. Say so
   instead of reporting that the class has posted nothing.

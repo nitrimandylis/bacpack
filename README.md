@@ -72,6 +72,8 @@ Two ManageBac quirks worth knowing. A CAS group can only be set when the experie
 
 `class discussions` reads the first page only, which is five posts. ManageBac hides the rest behind a "Show More" button whose route is not mapped, and at roughly a post a week that is weeks of headroom. A class that goes quiet for a term and then posts six times in one day loses the oldest of them. The body keeps its line breaks, because that is where the homework lives: teachers list the exercises one to a line.
 
+`portfolio list` walks every page. The index holds ten entries a page, and reading only the first one returned the newest ten with exit code 0, which is indistinguishable from a class that has ten. A Greek class with sixteen entries reported ten, and the six it dropped were the oldest. The loop stops on the first page that adds nothing new, so a short portfolio still costs one request and a long one costs a request per ten entries.
+
 `--class` takes part of a class name, not an id: `--class greek`. Ids change each school year, and every class exposes the portfolio route, so a name is both safer and shorter than the number.
 
 ## 🚀 Run it

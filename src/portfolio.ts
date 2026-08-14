@@ -14,8 +14,7 @@ function reflectionsPath(classId: string): string {
   return `/student/classes/${classId}/learner_portfolio/reflections`;
 }
 
-export async function listEntries(classId: string): Promise<Entry[]> {
-  const html = await get(reflectionsPath(classId));
+function parseEntries(html: string): Entry[] {
   const blocks = html.split("journal-evidence").slice(1);
 
   return blocks.map((block) => ({
@@ -26,6 +25,35 @@ export async function listEntries(classId: string): Promise<Entry[]> {
     // `portfolio list --json` is for skimming, not for round-tripping HTML.
     body: stripTags(block.split("class='body'")[1] ?? "").slice(0, 200),
   }));
+}
+
+// ManageBac paginates the portfolio at ten entries a page, so reading the index
+// once returns the newest ten and nothing else, with exit code 0. That reads as
+// a complete list. A Greek class with sixteen entries reported ten, and the six
+// missing ones looked like Notion rows wrongly marked as posted.
+//
+// Pagination is a path segment, not a query parameter. Past the last page the
+// server still answers 200, with no entries on it.
+export async function listEntries(
+  classId: string,
+  // Injected so the paging loop is testable without mocking the whole client,
+  // which leaks into every other test file in the same run.
+  fetchPage: (path: string) => Promise<string> = get,
+): Promise<Entry[]> {
+  const entries: Entry[] = [];
+  const seen = new Set<string>();
+
+  for (let page = 1; ; page++) {
+    const path = page === 1 ? reflectionsPath(classId) : `${reflectionsPath(classId)}/page/${page}`;
+    const fresh = parseEntries(await fetchPage(path)).filter((entry) => !seen.has(entry.id));
+
+    // Stops on an empty page, and also on a server that clamps an out-of-range
+    // page back to the first one rather than emptying it.
+    if (fresh.length === 0) return entries;
+
+    for (const entry of fresh) seen.add(entry.id);
+    entries.push(...fresh);
+  }
 }
 
 // Works are per class and change every year, and the tag ids belong to the IB
