@@ -51,7 +51,8 @@ const HELP = `bacpack - ManageBac from the terminal
   contains a comma: --tags "Culture, identity and community" --tags "Identity"
 Writes preview and exit without sending. Add --confirm to actually post.
 
-Needs MANAGEBAC_SCHOOL (your subdomain) and ~/.config/managebac/cookie
+Needs MANAGEBAC_SCHOOL (your subdomain), plus either MANAGEBAC_EMAIL and
+  MANAGEBAC_PASSWORD or ~/.config/managebac/credentials. Logs itself in.
 `;
 
 const { values, positionals } = parseArgs({

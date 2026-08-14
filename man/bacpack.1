@@ -1,4 +1,4 @@
-.TH BACPACK 1 "2026-08-03" "bacpack 0.1.0" "User Commands"
+.TH BACPACK 1 "2026-08-14" "bacpack 0.1.0" "User Commands"
 .SH NAME
 bacpack \- read and write ManageBac from the terminal
 .SH SYNOPSIS
@@ -93,7 +93,9 @@ numbered \fIname\-2.pdf\fR rather than overwriting. No \fB\-\-confirm\fR: this
 writes to your disk, not to ManageBac.
 .TP
 .B "portfolio list \-\-class \fINAME\fR"
-Learner Portfolio entries with their tags.
+Learner Portfolio entries with their tags. The index is paginated at ten
+entries a page and every page is read, so this is the whole portfolio and not
+the newest ten.
 .TP
 .B "portfolio tags \-\-class \fINAME\fR"
 The works and the full tag taxonomy, grouped by category. Works change every
@@ -198,7 +200,13 @@ download from it now rather than storing it.
 .TP
 .B class discussions
 An array of
-.IR "{id, title}" .
+.IR "{id, title, author, category, postedAt, posted, body, url}" .
+.I category
+and
+.I postedAt
+are null when ManageBac prints no category or an unparseable date;
+.I posted
+always carries the date exactly as printed.
 .TP
 .B portfolio list
 An array of
