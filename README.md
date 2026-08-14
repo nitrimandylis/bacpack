@@ -25,11 +25,11 @@
 
 ## 📚 What is this
 
-ManageBac has a public API. It is administrator-only, and if you are a student you are not getting a key. bacpack takes the other route: your own session cookie, the same one your browser already holds, and reads the pages you can already see.
+ManageBac has a public API. It is administrator-only, and if you are a student you are not getting a key. bacpack takes the other route: it logs in as you and reads the pages you can already see.
 
 It does three things. It tells you what is due, it logs CAS experiences, and it adds entries to a Learner Portfolio. Reads are live, so there is no local copy to go stale. Writes print what they are about to send and then stop, because a school record is not a place to find out your flags were wrong.
 
-The interesting parts are not the HTTP. ManageBac answers 422 to about half of all requests unless you send `Accept: text/html`, which reads like rate limiting and is not. It prints dates without a year. Teachers post the same deadline twice. bacpack is mostly the handling of those three facts.
+The interesting parts are not the HTTP. ManageBac answers 422 to about half of all requests unless you send `Accept: text/html`, which reads like rate limiting and is not. It prints dates without a year. Teachers post the same deadline twice. A dead session arrives as a redirect with an empty body, which is indistinguishable from a page whose markup moved unless you look at where it points. bacpack is mostly the handling of those four facts.
 
 ```console
 nick@bacpack:~$ bacpack due --days 14
@@ -97,7 +97,7 @@ chmod 600 ~/.config/managebac/credentials
 
 `MANAGEBAC_EMAIL` and `MANAGEBAC_PASSWORD` work instead of the file, which is what CI should use.
 
-bacpack logs itself in and caches the session in `~/.config/managebac/cookie`. Sessions last about a fortnight rather than the year the cookie's `expires` attribute advertises, so when one dies the next command logs in again and carries on. Nothing to refresh by hand. If you would rather not store a password, paste a `_managebac_session` value into that cookie file yourself and bacpack will use it until it expires.
+bacpack logs itself in and caches the session in `~/.config/managebac/cookie`. Sessions last about a fortnight rather than the year the cookie's `expires` attribute advertises, so when one dies the next command logs in again and carries on. You never refresh it by hand. If you would rather not store a password, paste a `_managebac_session` value into that cookie file yourself and bacpack will use it until it expires.
 
 ```bash
 bacpack due

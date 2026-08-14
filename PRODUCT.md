@@ -3,9 +3,8 @@
 ## What it is
 
 A CLI over ManageBac for students. It answers "what's due", downloads a class's files, logs CAS
-experiences and reflections, and writes Learner Portfolio entries, using the session cookie the
-browser already holds. The official ManageBac+ API is administrator-only, so there is no supported
-route for a student.
+experiences and reflections, and writes Learner Portfolio entries, over an ordinary student login.
+The official ManageBac+ API is administrator-only, so there is no supported route for a student.
 
 Reads are live. Nothing is mirrored locally, so nothing can go stale. The one exception is
 `class files --download`, which saves files to a directory you name, because a PDF you cannot
@@ -14,15 +13,18 @@ whole class runs to hundreds of megabytes.
 
 ## Why it exists
 
-Three facts about ManageBac make a naive scraper quietly wrong rather than loudly broken:
+Four facts about ManageBac make a naive scraper quietly wrong rather than loudly broken:
 
 1. Requests without an **`Accept: text/html`** header get 422 about half the time. It reads
    like rate limiting, or like the session cookie rotating, and is neither. ManageBac does hand
    back a different cookie, but adopting it is what actually breaks the session.
 2. Deadlines are printed **without a year**.
 3. Teachers **post the same deadline twice**, with different ids and slightly different titles.
+4. A session **dies after about a fortnight**, not the year its cookie advertises, and it arrives
+   as a `302` to `/login` with an empty body. Read as a success, that empty body looks exactly
+   like markup that moved. bacpack logs in again and replays the request instead.
 
-Most of bacpack is the handling of those three, plus refusing to report an empty week when the
+Most of bacpack is the handling of those four, plus refusing to report an empty week when the
 markup has changed underneath it.
 
 ## Principles

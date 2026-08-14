@@ -15,9 +15,11 @@ database, **you** are the glue that reads it and builds the command.
 export MANAGEBAC_SCHOOL=<subdomain>     # acme for acme.managebac.com
 ```
 
-The session cookie lives at `~/.config/managebac/cookie`. **Never read, print, echo or pass it
-around.** bacpack loads it itself. A `401` means it expired, and only the user can refresh it from
-their browser.
+Credentials live at `~/.config/managebac/credentials`, and the session bacpack caches for itself
+at `~/.config/managebac/cookie`. **Never read, print, echo or pass either around.** bacpack loads
+them itself and logs in again when the session lapses, which is roughly fortnightly, so an expired
+session needs nothing from you or the user. `ManageBac rejected the login` is the one case that
+does: the password changed, and only the user can fix it.
 
 If the binary is not on PATH, run from source: `bun run src/index.ts …`
 
@@ -93,8 +95,8 @@ bacpack portfolio star|delete --class NAME --id N [--confirm]
   -> <textarea name="evidence[body]">…</textarea>     (HTML-unescape it)
   ```
 
-  Send `Accept: text/html`, replay the cookie from `~/.config/managebac/cookie` on every request
-  without ever printing it, and retry on 422. Apply the smallest possible string edit to what you
+  Send `Accept: text/html`, replay the cached session from `~/.config/managebac/cookie` on every
+  request without ever printing it, and retry on 422. Apply the smallest possible string edit to what you
   read, assert the match count before replacing, then post and re-read to diff. Treat a body you
   could not read as a body you may not edit.
 - **A label containing a comma needs its own `--tags` occurrence.** `--tags a,b` is still a list,
