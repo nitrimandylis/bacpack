@@ -1,15 +1,21 @@
 // One ManageBac session, shared by every command.
 //
-// Three failure modes are real and are handled explicitly:
-//   401  the cookie is dead, tell the user to refresh it, never retry
-//   422  Rails refusing the request format, see ACCEPT below
+// Four failure modes are real and are handled explicitly:
+//   302 to /login  the session died, log in again and retry once
+//   401            same thing by another name, treated identically
+//   422            Rails refusing the request format, see ACCEPT below
 //   200 with nothing parseable  the selectors rotted, callers must shout
 
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-const COOKIE_PATH = join(homedir(), ".config", "managebac", "cookie");
+// Resolved per call rather than once at import, and from HOME rather than
+// homedir(), which Bun caches at process start. Both matter: login() writes a
+// file here, and a stale path would write it outside the caller's home.
+const configDir = () => join(process.env.HOME || homedir(), ".config", "managebac");
+const cookiePath = () => join(configDir(), "cookie");
+const credentialsPath = () => join(configDir(), "credentials");
 const USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)";
 const MAX_ATTEMPTS = 4;
 
@@ -21,7 +27,14 @@ const ACCEPT = "text/html";
 // The session cookie, read once and replayed unchanged on every request.
 // ManageBac does hand back a different value in Set-Cookie, but that value is
 // a downgrade: adopting it makes every later request 422 with no recovery.
+// The one exception is the cookie issued by login() below, which is a real
+// session rather than a mid-flight rotation.
 let session = "";
+
+// Sessions last about a fortnight, so one re-login per process is expected and
+// two in a row means the credentials are wrong, not that the session lapsed
+// again mid-run.
+let loggedIn = false;
 
 function baseUrl(): string {
   const school = process.env.MANAGEBAC_SCHOOL;
@@ -34,19 +47,88 @@ function baseUrl(): string {
   return `https://${school}.managebac.com`;
 }
 
+// The cookie file is a cache, not a credential to maintain: an empty or
+// missing one just means the next request logs in and writes a new one.
 function loadCookie(): string {
+  try {
+    return readFileSync(cookiePath(), "utf8").trim();
+  } catch {
+    return "";
+  }
+}
+
+function loadCredentials(): { email: string; password: string } {
+  const email = process.env.MANAGEBAC_EMAIL;
+  const password = process.env.MANAGEBAC_PASSWORD;
+  if (email && password) return { email, password };
+
   let raw: string;
   try {
-    raw = readFileSync(COOKIE_PATH, "utf8");
+    raw = readFileSync(credentialsPath(), "utf8");
   } catch {
     throw new Error(
-      `No session cookie at ${COOKIE_PATH}\n` +
-        "See the README for how to copy _managebac_session out of your browser.",
+      "No ManageBac credentials.\n" +
+        "Set MANAGEBAC_EMAIL and MANAGEBAC_PASSWORD, or write your email on line 1 " +
+        `and your password on line 2 of ${credentialsPath()} (chmod 600).`,
     );
   }
-  const value = raw.trim();
-  if (!value) throw new Error(`${COOKIE_PATH} is empty.`);
-  return value;
+  const [fileEmail, filePassword] = raw.split("\n").map((line) => line.trim());
+  if (!fileEmail || !filePassword) {
+    throw new Error(`${credentialsPath()} needs an email on line 1 and a password on line 2.`);
+  }
+  return { email: fileEmail, password: filePassword };
+}
+
+function sessionFrom(response: Response): string {
+  const match = (response.headers.get("set-cookie") ?? "").match(/_managebac_session=([^;]+)/);
+  return match ? match[1] : "";
+}
+
+// Logs in with the credentials and caches the session it gets back.
+//
+// The CSRF token is bound to the pre-auth session handed out with the login
+// page, so both have to be carried into the POST. Success answers 302 to
+// Faria's single-sign-on handoff at accounts.faria.org; that redirect is never
+// followed, because the cookie set alongside it already works. A rejected
+// login re-renders the form as a 200, so only a redirect counts as success.
+async function login(): Promise<string> {
+  const { email, password } = loadCredentials();
+
+  const page = await fetch(baseUrl() + "/login", {
+    headers: { "User-Agent": USER_AGENT, Accept: ACCEPT },
+  });
+  const token = (await page.text()).match(/name="authenticity_token" value="([^"]+)"/)?.[1];
+  const preAuth = sessionFrom(page);
+  if (!token || !preAuth) {
+    throw new Error("Could not read the login form. ManageBac changed its login page.");
+  }
+
+  const response = await fetch(baseUrl() + "/sessions", {
+    method: "POST",
+    redirect: "manual",
+    body: new URLSearchParams({
+      authenticity_token: token,
+      login: email,
+      password,
+      remember_me: "1",
+      commit: "Login",
+    }),
+    headers: {
+      "User-Agent": USER_AGENT,
+      Accept: ACCEPT,
+      "Content-Type": "application/x-www-form-urlencoded",
+      Cookie: `_managebac_session=${preAuth}`,
+    },
+  });
+
+  const fresh = sessionFrom(response);
+  if (response.status < 300 || response.status >= 400 || !fresh) {
+    throw new Error("ManageBac rejected the login. Check the email and password.");
+  }
+
+  writeFileSync(cookiePath(), fresh, { mode: 0o600 });
+  loggedIn = true;
+  return fresh;
 }
 
 function sleep(ms: number): Promise<void> {
@@ -54,7 +136,7 @@ function sleep(ms: number): Promise<void> {
 }
 
 async function request(path: string, body?: URLSearchParams): Promise<{ status: number; text: string }> {
-  if (!session) session = loadCookie();
+  if (!session) session = loadCookie() || (await login());
 
   let lastStatus = 0;
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
@@ -70,14 +152,32 @@ async function request(path: string, body?: URLSearchParams): Promise<{ status: 
     });
     lastStatus = response.status;
 
-    // A Rails form POST answers 302 on success, so treat any redirect as one.
-    if (response.status === 200 || (response.status >= 300 && response.status < 400)) {
-      return { status: response.status, text: await response.text() };
+    // An expired session is a 302 to /login with an empty body, and a 401 on
+    // the endpoints that answer honestly. Both are recoverable: log in again
+    // and replay the request. Without this the empty body sails through as a
+    // success and every caller reports rotted selectors instead.
+    const redirect = response.status >= 300 && response.status < 400;
+    const toLogin = redirect && (response.headers.get("location") ?? "").includes("/login");
+    if (toLogin || response.status === 401) {
+      if (loggedIn) {
+        throw new Error("Logged in, but the session was rejected again. Check the credentials.");
+      }
+      // A POST carries a CSRF token minted for the dead session, so replaying
+      // it after logging in would fail in a way that looks like a bad form.
+      // Log in so the next run works, then say plainly that nothing was
+      // written.
+      if (body) {
+        await login();
+        throw new Error("The session expired mid-write, so nothing was submitted. Run it again.");
+      }
+      session = await login();
+      continue;
     }
-    if (response.status === 401) {
-      throw new Error(
-        `Session expired (401).\nLog in to ManageBac in your browser and refresh ${COOKIE_PATH}`,
-      );
+
+    // A Rails form POST answers 302 on success, so treat any other redirect
+    // as one.
+    if (response.status === 200 || redirect) {
+      return { status: response.status, text: await response.text() };
     }
     if (response.status === 404) {
       throw new Error(`Not found: ${path}`);

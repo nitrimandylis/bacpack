@@ -76,7 +76,7 @@ Two ManageBac quirks worth knowing. A CAS group can only be set when the experie
 
 ## 🚀 Run it
 
-Needs [Bun](https://bun.sh). You supply two things: your school's subdomain, and your session cookie.
+Needs [Bun](https://bun.sh). You supply two things: your school's subdomain, and your ManageBac login.
 
 ```bash
 git clone https://github.com/nitrimandylis/bacpack.git
@@ -90,12 +90,14 @@ Then, once:
 ```bash
 export MANAGEBAC_SCHOOL=yourschool          # yourschool.managebac.com
 mkdir -p ~/.config/managebac
-# paste the value of the _managebac_session cookie into this file:
-$EDITOR ~/.config/managebac/cookie
-chmod 600 ~/.config/managebac/cookie
+# your ManageBac email on line 1, your password on line 2:
+$EDITOR ~/.config/managebac/credentials
+chmod 600 ~/.config/managebac/credentials
 ```
 
-To find the cookie: log in to ManageBac, open devtools, Application → Cookies → your ManageBac domain, copy the value of `_managebac_session`. It lasts about a year. When it dies you get a clean 401 telling you so, not a silent empty result.
+`MANAGEBAC_EMAIL` and `MANAGEBAC_PASSWORD` work instead of the file, which is what CI should use.
+
+bacpack logs itself in and caches the session in `~/.config/managebac/cookie`. Sessions last about a fortnight rather than the year the cookie's `expires` attribute advertises, so when one dies the next command logs in again and carries on. Nothing to refresh by hand. If you would rather not store a password, paste a `_managebac_session` value into that cookie file yourself and bacpack will use it until it expires.
 
 ```bash
 bacpack due
@@ -122,8 +124,8 @@ cp -R bacpack-cli ~/.claude/skills/     # or wherever yours looks
 
 ```mermaid
 flowchart LR
-    A[cookie file] --> B[client.ts]
-    B -->|Accept: text/html, retry| B
+    A[credentials] --> B[client.ts]
+    B -->|Accept: text/html, retry, re-login| B
     B --> C[due.ts]
     B --> D[cas.ts]
     B --> E[portfolio.ts]
@@ -146,7 +148,7 @@ flowchart LR
 | classes | `src/classes.ts` | units, discussions, and the file tree — including the download, which reads each row's signed CDN link straight out of the markup |
 | cli | `src/index.ts` | argument parsing and the preview that stands between you and a permanent record |
 
-Three failure modes are handled by name, because all three have happened. `401` means the cookie died, so it says so and stops. `422` means Rails refused the request format, which the `Accept` header prevents and the retry loop covers. `200` with nothing parseable means ManageBac changed its markup, so it exits non-zero rather than telling you your week is clear.
+Four failure modes are handled by name, because all four have happened. A `302` to `/login`, or a `401`, means the session died: bacpack logs in again and replays the request, once. `422` means Rails refused the request format, which the `Accept` header prevents and the retry loop covers. `200` with nothing parseable means ManageBac changed its markup, so it exits non-zero rather than telling you your week is clear.
 
 **Stack:** Bun · TypeScript · `node:util` parseArgs · no runtime dependencies
 

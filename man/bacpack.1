@@ -23,14 +23,27 @@ is what actually posts.
 Required. The subdomain of your school's ManageBac, e.g.
 .B acme
 for acme.managebac.com.
+.TP
+.BR MANAGEBAC_EMAIL ", " MANAGEBAC_PASSWORD
+Your ManageBac login. Checked before the credentials file, so CI can pass them
+without writing anything to disk.
 .SH FILES
 .TP
+.I ~/.config/managebac/credentials
+Your ManageBac email on line 1, your password on line 2. Mode 600. The
+environment variables
+.B MANAGEBAC_EMAIL
+and
+.B MANAGEBAC_PASSWORD
+take precedence.
+.TP
 .I ~/.config/managebac/cookie
-The value of your
+The cached
 .B _managebac_session
-cookie, copied from a browser. Lasts about a year. When it expires bacpack
-exits with a
-clear 401 rather than reporting an empty result.
+value, written by bacpack itself. Sessions last about a fortnight, not the year
+the cookie advertises; when one dies bacpack logs in again and rewrites this
+file. A cookie pasted here by hand is used as-is, which avoids storing a
+password.
 .SH COMMANDS
 .TP
 .B due
@@ -201,7 +214,7 @@ and
 .IR tags ,
 each an array of the values that class accepts.
 .SH EXIT STATUS
-Non-zero on a dead cookie, an unresolvable class or tag, or a page that parsed
+Non-zero on a rejected login, an unresolvable class or tag, or a page that parsed
 to nothing.
 The last case means ManageBac changed its markup, not that there is no work due.
 .SH SEE ALSO
