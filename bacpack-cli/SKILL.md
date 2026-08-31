@@ -45,7 +45,7 @@ bacpack class files --class NAME [--match TEXT] [--download DIR]
                                         # --match "paper 2" or --match annotated narrows it
                                         # --download saves to DIR/<class>/<folder>/
 bacpack portfolio list --class NAME [--json]
-bacpack portfolio tags --class NAME     # live works + the whole tag taxonomy
+bacpack portfolio tags --class NAME [--json]  # live works + the whole tag taxonomy
 ```
 
 Use `--json` whenever you are going to parse the result. The prose output is for humans.
@@ -59,6 +59,7 @@ bacpack cas add --name "..." --start ISO --end ISO \
   --approaches ongoing,school-based,community-based,individual \
   --outcomes ethics,collaboration --group "..." \
   --supervisor-name "..." --supervisor-email "..." \
+  # --supervisor-title and --supervisor-phone also exist \
   --notes-file FILE [--project] [--confirm]
 
 bacpack cas edit --experience NAME [same flags] [--confirm]
