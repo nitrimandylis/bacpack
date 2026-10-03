@@ -42,7 +42,7 @@ nick@bacpack:~$ bacpack due --days 14
 | | command | what it actually does |
 |---|---|---|
 | 01 | **`due`** | upcoming deadlines, `--days N` to cut it short. infers the missing year, keeps genuine duplicates |
-| 02 | **`task`** | one task's full description and its attachments, found by part of its title. `--download DIR` saves the attachments |
+| 02 | **`task`** | one task's full description and its attachments, found by part of its title or by its url from `due --json`. `--class` narrows a title two classes share. `--download DIR` saves the attachments |
 | 03 | **`classes`** | your classes and their ids, mostly so you can see what `--class` will match |
 | 04 | **`cas list`** | every CAS experience with hours, strands and reflection count |
 | 05 | **`cas outcomes`** | the seven IB learning outcomes and their ids — per school, so read, never hardcoded |
@@ -69,11 +69,15 @@ Two ManageBac quirks worth knowing. A CAS group can only be set when the experie
 
 `cas reflect` takes a body and nothing else. The create form carries no learning-outcome checkboxes, and an `evidence[url]` value posts cleanly and then appears nowhere. Both were tested live and silently dropped, so there are no flags for them — a flag that previews confidently and changes nothing is worse than a missing feature.
 
+`task --download DIR` prints a one-line summary and ignores `--json`.
+
 `class files --download DIR` and `task --download DIR` are the only writes that need no `--confirm`, because they write to your disk and not to ManageBac. `task` saves a task's attachments under `DIR/<task title>/`. It rebuilds the class folder layout under `DIR/<class name>/`, skips anything already on disk so an interrupted run resumes by running it again, and numbers collisions rather than overwriting: a folder really can hold two different files under one name. Modern Greek A comes to 67 files and 235 MB, so it is not a small command: `--match "paper 2"` narrows it to one folder, `--match annotated` to one kind of file. The needle is tested against `folder/name`, so a single flag does both, and a needle that matches nothing is an error rather than a quiet empty download.
 
 `class discussions` reads the first page only, which is five posts. ManageBac hides the rest behind a "Show More" button whose route is not mapped, and at roughly a post a week that is weeks of headroom. A class that goes quiet for a term and then posts six times in one day loses the oldest of them. The body keeps its line breaks, because that is where the homework lives: teachers list the exercises one to a line.
 
 `portfolio list` walks every page. The index holds ten entries a page, and reading only the first one returned the newest ten with exit code 0, which is indistinguishable from a class that has ten. A Greek class with sixteen entries reported ten, and the six it dropped were the oldest. The loop stops on the first page that adds nothing new, so a short portfolio still costs one request and a long one costs a request per ten entries.
+
+The experience flags are shared by `cas add` and `cas edit`: `--name`, `--start`, `--end`, `--creativity`, `--action`, `--service`, `--service-type`, `--approaches`, `--outcomes`, `--group`, `--notes-file`, `--project`, `--notify-advisor` and `--supervisor-name`, `-title`, `-email`, `-phone`. `cas edit`, `cas delete` and `cas reflect` find the experience with `--experience NAME`, and `portfolio edit`, `star` and `delete` take `--id N`. `--notify-advisor` is off unless passed, and `cas add` only: ManageBac's edit form has no such field, so `cas edit` rejects it.
 
 `--class` takes part of a class name, not an id: `--class greek`. Ids change each school year, and every class exposes the portfolio route, so a name is both safer and shorter than the number.
 
@@ -134,10 +138,12 @@ flowchart LR
     B --> D[cas.ts]
     B --> E[portfolio.ts]
     B --> I[classes.ts]
+    B --> K[task.ts]
     C --> F[index.ts]
     D --> F
     E --> F
     I --> F
+    K --> F
     I -->|signed CDN links| J[your disk]
     F -->|preview| G[stdout]
     F -->|--confirm| H[ManageBac]
@@ -150,6 +156,7 @@ flowchart LR
 | cas | `src/cas.ts` | experiences and the create form, including the advisor-email checkbox that ships pre-ticked |
 | portfolio | `src/portfolio.ts` | reflections, the tag taxonomy, and the create form that has no title field |
 | classes | `src/classes.ts` | units, discussions, and the file tree — including the download, which reads each row's signed CDN link straight out of the markup |
+| task | `src/task.ts` | one task's page: the description and its attachments, found by title or url, reusing the file download from `classes.ts` |
 | cli | `src/index.ts` | argument parsing and the preview that stands between you and a permanent record |
 
 Four failure modes are handled by name, because all four have happened. A `302` to `/login`, or a `401`, means the session died: bacpack logs in again and replays the request, once. `422` means Rails refused the request format, which the `Accept` header prevents and the retry loop covers. `200` with nothing parseable means ManageBac changed its markup, so it exits non-zero rather than telling you your week is clear.

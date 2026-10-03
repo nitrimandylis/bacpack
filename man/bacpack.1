@@ -12,7 +12,10 @@ entries.
 The official ManageBac+ API is administrator-only, so this drives the web
 interface instead.
 .PP
-Reads are live and nothing is cached, except for files you ask
+Reads are live and nothing is cached, except for the session cookie
+(see
+.BR FILES )
+and files you ask
 .B \-\-download
 to save. Every write prints a preview and exits without sending;
 .B \-\-confirm
@@ -125,7 +128,7 @@ Show help.
 Actually send the write. Without it, every write previews and exits.
 .TP
 .B \-\-json
-Machine-readable output. Available on every read.
+Machine-readable output. Available on every read. \fBtask \-\-download\fR ignores it.
 .TP
 .BI \-\-class " NAME"
 Part of a class name, not an id: \fB\-\-class greek\fR. Ids change each school
@@ -147,6 +150,27 @@ On \fBclass files\fR, save every file under \fIDIR\fR instead of listing them.
 On \fBtask\fR, save the task's attachments under \fIDIR/<task title>/\fR.
 Takes no \fB\-\-confirm\fR: it writes to your disk, not to ManageBac.
 .TP
+.BI \-\-name " TEXT" ", " \-\-start " ISO" ", " \-\-end " ISO"
+On \fBcas add\fR and \fBcas edit\fR: the experience name and its dates.
+.TP
+.BI \-\-experience " NAME"
+Part of an experience name. Used by \fBcas edit\fR, \fBdelete\fR and \fBreflect\fR.
+.TP
+.BI \-\-id " N"
+The entry id, as shown by \fBportfolio list \-\-json\fR. Used by \fBportfolio edit\fR, \fBstar\fR and \fBdelete\fR.
+.TP
+.BI \-\-group " NAME"
+Part of a school group name, as listed by \fBcas groups\fR. Settable only when the experience is created.
+.TP
+.BI \-\-notes\-file " FILE"
+CAS experience notes, read from \fIFILE\fR.
+.TP
+.B \-\-project
+Mark the experience as a CAS project. Off unless passed.
+.TP
+.BI \-\-supervisor\-name " TEXT" ", " \-\-supervisor\-title " TEXT" ", " \-\-supervisor\-email " TEXT" ", " \-\-supervisor\-phone " TEXT"
+The CAS supervisor's details.
+.TP
 .BI \-\-creativity " H" ", " \-\-action " H" ", " \-\-service " H"
 Hours per CAS strand.
 .TP
@@ -167,9 +191,12 @@ ambiguous label as
 \fBConcepts/Culture\fR.
 .TP
 .B \-\-notify\-advisor
-Email the CAS advisor. Off unless passed. The ManageBac checkbox ships
-pre-ticked, so bacpack
-always sends the field explicitly.
+Email the CAS advisor when the experience is created. Off unless passed.
+.B cas add
+only: the ManageBac edit form has no such field, so
+.B cas edit
+rejects it. The checkbox ships pre-ticked, so bacpack always sends the
+field explicitly.
 .SH JSON OUTPUT
 With
 .BR \-\-json ,
@@ -194,6 +221,25 @@ instead.
 .B cas list
 An array of
 .IR "{id, name, badges, hours, reflections}" .
+.TP
+.B task
+One object,
+.IR "{title, subject, when, due, badges, action, url, description, attachments}" .
+.I attachments
+is an array of
+.IR "{name, size, path}" .
+With
+.B \-\-download
+it prints a one-line summary instead and ignores
+.BR \-\-json .
+.TP
+.B cas outcomes
+An array of
+.IR "{id, label}" .
+.TP
+.B cas groups
+An array of
+.IR "{id, label}" .
 .TP
 .B class units
 An array of

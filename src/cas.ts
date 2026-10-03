@@ -178,16 +178,18 @@ export function buildForm(fields: ExperienceFields, token: string, commit: strin
     form.append("cas_activity[learning_outcome_ids][]", id);
   }
 
-  // This checkbox ships pre-checked in the HTML. Inheriting the default emails
-  // the CAS advisor on every single entry, so it is always sent explicitly.
-  form.set("cas_activity[notify_cas_advisor_email]", fields.notifyAdvisor ? "1" : "0");
   form.set("commit", commit);
   return form;
 }
 
 export async function createExperience(fields: ExperienceFields): Promise<void> {
   const html = await get(CAS_NEW_PATH);
-  await post(CAS_PATH, buildForm(fields, csrfToken(html), "Add CAS Experience"));
+  const form = buildForm(fields, csrfToken(html), "Add CAS Experience");
+  // Create-only: the edit form has no such field. It ships pre-checked in the
+  // HTML, and inheriting the default emails the CAS advisor on every single
+  // entry, so it is always sent explicitly.
+  form.set("cas_activity[notify_cas_advisor_email]", fields.notifyAdvisor ? "1" : "0");
+  await post(CAS_PATH, form);
 }
 
 // The edit form posts every field, so read the current values and let the CLI

@@ -31,7 +31,7 @@ const HELP = `bacpack - ManageBac from the terminal
     --service-type direct|indirect|advocacy|research
     --approaches ongoing,school-based,community-based,individual
     --outcomes a,b        --group NAME          --notes-file FILE
-    --project             --notify-advisor      (both default off)
+    --project             --notify-advisor      (both default off; notify is add-only)
     --supervisor-name/-title/-email/-phone TEXT
 
   bacpack class units --class NAME [--json]
@@ -327,6 +327,9 @@ async function main(): Promise<void> {
   }
 
   if (command === "cas" && sub === "edit") {
+    if (values["notify-advisor"] === true) {
+      throw new Error("--notify-advisor only applies to cas add: ManageBac's edit form has no such field.");
+    }
     const experience = await cas.resolveExperience(required("experience"));
     const current = await cas.fetchExperienceFields(experience.id);
     const fields = await experienceFromFlags(current);
@@ -483,7 +486,7 @@ async function main(): Promise<void> {
       const entryId = required("id");
       const entries = await portfolio.listEntries(klass.id);
       const entry = entries.find((candidate) => candidate.id === entryId);
-      if (!entry) throw new Error(`No entry ${entryId} on the first page of ${klass.name}.`);
+      if (!entry) throw new Error(`No entry ${entryId} in ${klass.name}.`);
 
       const ok = previewed([
         [sub === "star" ? "star/unstar" : "DELETE", `${entryId} in ${klass.name}`],
