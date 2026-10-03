@@ -2,7 +2,7 @@
 
 ## What it is
 
-A CLI over ManageBac for students. It answers "what's due", downloads a class's files, logs CAS
+A CLI over ManageBac for students. It answers "what's due" and "what does this task actually ask", downloads a class's files, logs CAS
 experiences and reflections, and writes Learner Portfolio entries, over an ordinary student login.
 The official ManageBac+ API is administrator-only, so there is no supported route for a student.
 

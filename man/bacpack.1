@@ -78,6 +78,13 @@ Remove one, after showing its hours and reflection count.
 .B "cas reflect \-\-experience \fINAME\fB \-\-body\-file \fIFILE\fR"
 Add a reflection. Body only: the form carries no other usable field.
 .TP
+.B "task \fITITLE\fB [\-\-class \fINAME\fB] [\-\-download \fIDIR\fB]"
+One upcoming task: the description the teacher wrote and the files attached to
+it. \fITITLE\fR is part of the task title, or its \fI/student/...\fR url from
+\fBdue \-\-json\fR. When two classes set the same title, the command lists
+both and asks for \fB\-\-class\fR. \fB\-\-download\fR saves the attachments
+under \fIDIR/<task title>/\fR. Only tasks still listed by \fBdue\fR can be found.
+.TP
 .B "class units|files|discussions \-\-class \fINAME\fR"
 Unit plans, every file in the class, or discussion posts. A discussion carries
 its date, category, author and body, and the body keeps its line breaks because

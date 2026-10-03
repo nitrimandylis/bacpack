@@ -42,23 +42,24 @@ nick@bacpack:~$ bacpack due --days 14
 | | command | what it actually does |
 |---|---|---|
 | 01 | **`due`** | upcoming deadlines, `--days N` to cut it short. infers the missing year, keeps genuine duplicates |
-| 02 | **`classes`** | your classes and their ids, mostly so you can see what `--class` will match |
-| 03 | **`cas list`** | every CAS experience with hours, strands and reflection count |
-| 04 | **`cas outcomes`** | the seven IB learning outcomes and their ids — per school, so read, never hardcoded |
-| 05 | **`cas groups`** | school groups you can attach an experience to |
-| 06 | **`cas add`** | creates an experience: strands, service type, approaches, supervisor, group, outcomes |
-| 07 | **`cas edit`** | changes one. anything you don't pass keeps its current value |
-| 08 | **`cas delete`** | removes one, after showing you its hours and reflection count |
-| 09 | **`cas reflect`** | adds a reflection to an experience, found by name. body only — see below |
-| 10 | **`class units`** | unit plans with their status and HL/SL badges |
-| 11 | **`class files`** | every file in the class, folder by folder. `--match` narrows, `--download DIR` saves |
-| 12 | **`class discussions`** | discussion posts in full: date, category, author and the body teachers put the homework in |
-| 13 | **`portfolio list`** | portfolio entries with their tags and the first lines of each body |
-| 14 | **`portfolio tags`** | the works and the whole IB tag taxonomy, grouped. works change every September |
-| 15 | **`portfolio add`** | adds an entry. `--tags concepts/culture` by name, no id lookup |
-| 16 | **`portfolio edit`** | changes an entry. anything you don't pass keeps its current value |
-| 17 | **`portfolio star`** | toggles the star |
-| 18 | **`portfolio delete`** | removes an entry, after showing you which one |
+| 02 | **`task`** | one task's full description and its attachments, found by part of its title. `--download DIR` saves the attachments |
+| 03 | **`classes`** | your classes and their ids, mostly so you can see what `--class` will match |
+| 04 | **`cas list`** | every CAS experience with hours, strands and reflection count |
+| 05 | **`cas outcomes`** | the seven IB learning outcomes and their ids — per school, so read, never hardcoded |
+| 06 | **`cas groups`** | school groups you can attach an experience to |
+| 07 | **`cas add`** | creates an experience: strands, service type, approaches, supervisor, group, outcomes |
+| 08 | **`cas edit`** | changes one. anything you don't pass keeps its current value |
+| 09 | **`cas delete`** | removes one, after showing you its hours and reflection count |
+| 10 | **`cas reflect`** | adds a reflection to an experience, found by name. body only — see below |
+| 11 | **`class units`** | unit plans with their status and HL/SL badges |
+| 12 | **`class files`** | every file in the class, folder by folder. `--match` narrows, `--download DIR` saves |
+| 13 | **`class discussions`** | discussion posts in full: date, category, author and the body teachers put the homework in |
+| 14 | **`portfolio list`** | portfolio entries with their tags and the first lines of each body |
+| 15 | **`portfolio tags`** | the works and the whole IB tag taxonomy, grouped. works change every September |
+| 16 | **`portfolio add`** | adds an entry. `--tags concepts/culture` by name, no id lookup |
+| 17 | **`portfolio edit`** | changes an entry. anything you don't pass keeps its current value |
+| 18 | **`portfolio star`** | toggles the star |
+| 19 | **`portfolio delete`** | removes an entry, after showing you which one |
 
 Every read takes `--json`. Every write previews and exits; `--confirm` is what actually posts.
 
@@ -103,6 +104,7 @@ bacpack logs itself in and caches the session in `~/.config/managebac/cookie`. S
 
 ```bash
 bacpack due
+bacpack task "stacks" --download ~/Downloads
 bacpack class files --class greek --match "paper 2" --download ~/Downloads
 bacpack portfolio add --class greek --body-file entry.html --tags culture
 man bacpack        # full reference, offline

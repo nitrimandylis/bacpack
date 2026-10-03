@@ -36,6 +36,9 @@ permanent school record.
 
 ```bash
 bacpack due [--days 14] [--json]        # deadlines, year inferred, duplicates kept
+bacpack task TITLE [--class NAME] [--json] [--download DIR]
+                                        # one upcoming task: the teacher's description + attachments
+                                        # a title two classes share errors until --class narrows it
 bacpack classes [--json]
 bacpack cas list [--json]               # experiences with hours, badges, reflection counts
 bacpack cas outcomes                    # the 7 learning outcomes and their ids

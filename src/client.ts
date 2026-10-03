@@ -144,7 +144,10 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function request(path: string, body?: URLSearchParams): Promise<{ status: number; text: string }> {
+async function request(
+  path: string,
+  body?: URLSearchParams,
+): Promise<{ status: number; text: string; location: string }> {
   if (!session) session = loadCookie() || (await login());
 
   let lastStatus = 0;
@@ -186,7 +189,11 @@ async function request(path: string, body?: URLSearchParams): Promise<{ status: 
     // A Rails form POST answers 302 on success, so treat any other redirect
     // as one.
     if (response.status === 200 || redirect) {
-      return { status: response.status, text: await response.text() };
+      return {
+        status: response.status,
+        text: await response.text(),
+        location: response.headers.get("location") ?? "",
+      };
     }
     if (response.status === 404) {
       throw new Error(`Not found: ${path}`);
@@ -199,6 +206,15 @@ async function request(path: string, body?: URLSearchParams): Promise<{ status: 
 export async function get(path: string): Promise<string> {
   const { text } = await request(path);
   return text;
+}
+
+// Task attachments live behind a session-only /attachments/ route that
+// answers with a redirect to a pre-signed CDN link. Hand back that link, so
+// the download itself needs no cookie, the same as class files.
+export async function redirectTarget(path: string): Promise<string> {
+  const { location } = await request(path);
+  if (!location) throw new Error(`${path} did not redirect to a download.`);
+  return location;
 }
 
 export async function post(path: string, form: URLSearchParams): Promise<void> {

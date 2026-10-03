@@ -11,10 +11,12 @@ import { fetchTasks, withinDays, type Task } from "./due.ts";
 import * as cas from "./cas.ts";
 import * as portfolio from "./portfolio.ts";
 import * as classes from "./classes.ts";
+import * as task from "./task.ts";
 
 const HELP = `bacpack - ManageBac from the terminal
 
   bacpack due [--days N] [--json]
+  bacpack task TITLE [--class NAME] [--json] [--download DIR]
   bacpack classes [--json]
 
   bacpack cas list [--json]
@@ -46,6 +48,8 @@ const HELP = `bacpack - ManageBac from the terminal
   bacpack portfolio delete --class NAME --id N [--confirm]
 
 --class takes part of a class name, not an id, e.g. --class greek
+  (on task it narrows a title that two classes share, e.g. --class "group 2 hl")
+TITLE on task is part of an upcoming task's title, or its /student/... url from due --json
 --match takes part of a folder or file name, e.g. --match "paper 2"
 --tags and --works take a comma-separated list, and repeat for a label that
   contains a comma: --tags "Culture, identity and community" --tags "Identity"
@@ -264,6 +268,27 @@ async function main(): Promise<void> {
     let tasks = await fetchTasks(now);
     if (values.days) tasks = withinDays(tasks, Number(values.days), now);
     print(tasks, tasks.map(formatTask));
+    return;
+  }
+
+  if (command === "task") {
+    if (!sub) throw new Error("Give part of the task title, e.g. bacpack task \"stacks\"");
+    const picked = task.pickTask(await fetchTasks(new Date()), sub, values.class);
+    const detail = await task.fetchTaskDetail(picked.url);
+    const dir = values.download;
+    if (dir) {
+      // Not a write to ManageBac, so no --confirm: this only touches your disk.
+      const target = join(dir, classes.safeName(picked.title));
+      const written = await classes.download(await task.attachmentFiles(detail.attachments), target);
+      console.log(`${written.length} new of ${detail.attachments.length} attachments -> ${target}`);
+      return;
+    }
+    const files = detail.attachments.map((a) => `  ${a.name}  ${a.size}`).join("\n") || "  (none)";
+    print({ ...picked, ...detail }, [
+      `${picked.title}\n${picked.subject}\n${picked.when}  ${picked.badges.join(", ")}\n`,
+      `${detail.description || "(no description)"}\n`,
+      `Attachments:\n${files}`,
+    ]);
     return;
   }
 
