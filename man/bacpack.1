@@ -131,6 +131,7 @@ Machine-readable output. Available on every read.
 Part of a class name, not an id: \fB\-\-class greek\fR. Ids change each school
 year, and every
 class exposes the portfolio route, so a name is both safer and shorter.
+On \fBtask\fR it narrows a title that two classes share instead.
 .TP
 .BI \-\-days " N"
 Limit \fBdue\fR to the next N days.
@@ -143,6 +144,7 @@ error, not an empty result.
 .TP
 .BI \-\-download " DIR"
 On \fBclass files\fR, save every file under \fIDIR\fR instead of listing them.
+On \fBtask\fR, save the task's attachments under \fIDIR/<task title>/\fR.
 Takes no \fB\-\-confirm\fR: it writes to your disk, not to ManageBac.
 .TP
 .BI \-\-creativity " H" ", " \-\-action " H" ", " \-\-service " H"

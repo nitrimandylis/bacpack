@@ -1,6 +1,6 @@
 ---
 name: bacpack-cli
-description: Drive ManageBac from the terminal via the bacpack CLI — check what is due, download a class's files, log CAS experiences and reflections, and write Learner Portfolio entries. Use whenever the user asks what is due or overdue, wants the handouts or resources from a class, mentions CAS hours or reflections, the Learner Portfolio or IA tab, wants coursework pushed into ManageBac, or names ManageBac at all.
+description: Drive ManageBac from the terminal via the bacpack CLI — check what is due, read a task's instructions and attachments, download a class's files, log CAS experiences and reflections, and write Learner Portfolio entries. Use whenever the user asks what is due or overdue, what a task actually asks for, wants the handouts or resources from a class, mentions CAS hours or reflections, the Learner Portfolio or IA tab, wants coursework pushed into ManageBac, or names ManageBac at all.
 ---
 
 # bacpack
@@ -146,5 +146,5 @@ bacpack portfolio star|delete --class NAME --id N [--confirm]
 ## What it cannot do
 
 Submitting coursework, uploading a file anywhere, and anything involving grades. Files move one
-way only: `class files --download` pulls, nothing pushes. **ManageBac exposes no grades or
+way only: `class files --download` and `task --download` pull, nothing pushes. **ManageBac exposes no grades or
 report-card endpoint at all to a student session**, so never offer to fetch them.

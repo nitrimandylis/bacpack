@@ -6,8 +6,8 @@ A CLI over ManageBac for students. It answers "what's due" and "what does this t
 experiences and reflections, and writes Learner Portfolio entries, over an ordinary student login.
 The official ManageBac+ API is administrator-only, so there is no supported route for a student.
 
-Reads are live. Nothing is mirrored locally, so nothing can go stale. The one exception is
-`class files --download`, which saves files to a directory you name, because a PDF you cannot
+Reads are live. Nothing is mirrored locally, so nothing can go stale. The exceptions are
+`class files --download` and `task --download`, which save files to a directory you name, because a PDF you cannot
 open offline is not much of a read. `--match` narrows it to one folder or one handout, since a
 whole class runs to hundreds of megabytes.
 
