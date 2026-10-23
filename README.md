@@ -19,6 +19,8 @@
 ![api](https://img.shields.io/badge/official_api-admin_only_(so_no)-374151?style=flat-square&labelColor=111111)
 ![license](https://img.shields.io/badge/license-MIT-d97706?style=flat-square&labelColor=111111)
 
+![bacpack](.github/assets/bacpack.gif)
+
 </div>
 
 ---
