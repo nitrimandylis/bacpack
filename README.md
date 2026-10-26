@@ -154,9 +154,9 @@ flowchart LR
 
 | layer | path | job |
 |---|---|---|
-| client | `src/client.ts` | one session, replayed unchanged. sends `Accept: text/html`, retries, tells 401 from 422, resolves a class by name |
+| client | `src/client.ts` | one session, replayed unchanged. sends `Accept: text/html`, retries, tells 401 from 422, resolves a class by name. posts plain forms and multipart uploads |
 | due | `src/due.ts` | year inference, dedupe, and the guard that shouts when the selectors rot instead of reporting nothing due |
-| cas | `src/cas.ts` | experiences and the create form, including the advisor-email checkbox that ships pre-ticked |
+| cas | `src/cas.ts` | experiences and the create form, including the advisor-email checkbox that ships pre-ticked, plus reflections and photo albums |
 | portfolio | `src/portfolio.ts` | reflections, the tag taxonomy, and the create form that has no title field |
 | classes | `src/classes.ts` | units, discussions, and the file tree — including the download, which reads each row's signed CDN link straight out of the markup |
 | task | `src/task.ts` | one task's page: the description and its attachments, found by title or url, reusing the file download from `classes.ts` |
