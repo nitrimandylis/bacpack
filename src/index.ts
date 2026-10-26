@@ -25,6 +25,7 @@ const HELP = `bacpack - ManageBac from the terminal
   bacpack cas edit --experience NAME                 [experience flags] [--confirm]
   bacpack cas delete --experience NAME [--confirm]
   bacpack cas reflect --experience NAME --body-file FILE.html [--confirm]
+  bacpack cas photos --experience NAME FILE... [--caption TEXT] [--confirm]
 
   experience flags (on edit, anything omitted keeps its current value):
     --creativity H  --action H  --service H     hours per strand
@@ -88,6 +89,7 @@ const { values, positionals } = parseArgs({
     "service-type": { type: "string" },
     approaches: { type: "string" },
     group: { type: "string" },
+    caption: { type: "string" },
     "supervisor-name": { type: "string" },
     "supervisor-title": { type: "string" },
     "supervisor-email": { type: "string" },
@@ -369,6 +371,26 @@ async function main(): Promise<void> {
     if (!ok) return;
 
     await cas.addReflection(experience.id, body);
+    console.log("Posted.");
+    return;
+  }
+
+  if (command === "cas" && sub === "photos") {
+    const experience = await cas.resolveExperience(required("experience"));
+    const paths = positionals.slice(2);
+    if (paths.length === 0) throw new Error("Give at least one photo file after the flags.");
+    for (const path of paths) {
+      if (!(await Bun.file(path).exists())) throw new Error(`No such file: ${path}`);
+    }
+
+    const ok = previewed([
+      ["experience", `${experience.name} (${experience.reflections})`],
+      ["photos", `${paths.length}: ${paths.map((p) => p.split("/").pop()).join(", ")}`],
+      ["caption", values.caption ?? "(none)"],
+    ]);
+    if (!ok) return;
+
+    await cas.addPhotos(experience.id, paths, values.caption ?? "");
     console.log("Posted.");
     return;
   }

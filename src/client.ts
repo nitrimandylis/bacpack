@@ -146,7 +146,7 @@ function sleep(ms: number): Promise<void> {
 
 async function request(
   path: string,
-  body?: URLSearchParams,
+  body?: URLSearchParams | FormData,
 ): Promise<{ status: number; text: string; location: string }> {
   if (!session) session = loadCookie() || (await login());
 
@@ -217,7 +217,8 @@ export async function redirectTarget(path: string): Promise<string> {
   return location;
 }
 
-export async function post(path: string, form: URLSearchParams): Promise<void> {
+// FormData is for file uploads: fetch sets the multipart boundary itself.
+export async function post(path: string, form: URLSearchParams | FormData): Promise<void> {
   await request(path, form);
 }
 

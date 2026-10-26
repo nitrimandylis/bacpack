@@ -68,6 +68,7 @@ bacpack cas add --name "..." --start ISO --end ISO \
 bacpack cas edit --experience NAME [same flags] [--confirm]
 bacpack cas delete --experience NAME [--confirm]
 bacpack cas reflect --experience NAME --body-file FILE.html [--confirm]
+bacpack cas photos --experience NAME FILE... [--caption TEXT] [--confirm]
 
 bacpack portfolio add --class NAME --body-file FILE.html --tags a,b --works a,b [--confirm]
 bacpack portfolio edit --class NAME --id N [--body-file F] [--tags a,b] [--works a,b] [--confirm]
@@ -85,6 +86,9 @@ bacpack portfolio star|delete --class NAME --id N [--confirm]
   HTML or the entry renders headless. `--body-file` takes HTML and passes it through unchanged.
 - **`cas reflect` takes a body and nothing else.** That form has no learning-outcome checkboxes,
   and its `url` field accepts a value then discards it. There are deliberately no flags for either.
+- **Photos go in with `cas photos`, not in a reflection body.** One run is one album entry; the
+  caption, if given, goes on every photo. Album entries cannot be edited from the CLI, so check the
+  file list in the preview before `--confirm`.
 - **Edits preserve what you omit.** `cas edit --service 9` changes only the hours. This is load
   bearing: both edit forms overwrite every field they post, so the CLI reads the record first.
 - **A CAS group can only be set at creation.** ManageBac's edit form has no group field.

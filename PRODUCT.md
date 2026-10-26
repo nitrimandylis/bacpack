@@ -50,10 +50,11 @@ Nothing is committed. Candidates, roughly in order of usefulness:
 - **`due --ics`**, writing a calendar file to subscribe to. The only idea here that changes *where*
   the information reaches you rather than adding a command to remember.
 - **Coursework submission.** The biggest gap: deadlines say "Submit Coursework" and bacpack can
-  show the button but not press it. Multipart upload, a real build.
-- **Uploading attachments** to CAS reflections and portfolio entries. Same multipart problem.
-  Downloading is done: files carry a signed CDN link in the row markup, so pulling them needs no
-  upload machinery at all.
+  show the button but not press it. Needs its form mapped; the multipart post already exists.
+- **Uploading files** to portfolio entries, and CAS file evidence. CAS photos are done
+  (`cas photos`, 2026-10-26): the reflection form is already multipart, and the same POST with
+  `type=AlbumEvidence` makes an album. That made coursework submission a smaller build than it
+  looked: the multipart client exists now.
 - **`portfolio pdf`**, since ManageBac already renders one server-side.
 - **`class_stream`**, only if it turns out to be server-rendered somewhere. It returns no items in
   the page source for any class tested.
@@ -64,7 +65,7 @@ unbuilt, absent.
 ## Status
 
 Every command has been exercised against a live account, including the writes and a full 67-file
-download. Zero runtime dependencies, 37 tests over the parts with real logic (year inference,
+download. Zero runtime dependencies, 38 tests over the parts with real logic (year inference,
 duplicate deadlines, label resolution across punctuation differences, the file rows, whose
 JSON arrives double-escaped inside an HTML attribute, discussion posts, which sit in sibling
 divs with no per-post wrapper, and the portfolio index, which is paginated and used to be read

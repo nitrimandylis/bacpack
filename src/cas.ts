@@ -323,3 +323,28 @@ export async function addReflection(experienceId: string, body: string): Promise
   const html = await get(`${path}/new`);
   await post(path, buildReflectionForm(body, csrfToken(html)));
 }
+
+// Photos are a different evidence type on the same reflection form: the form
+// has one tab per type, and the hidden `type` field decides which is created.
+// AlbumEvidence takes any number of photos, so one POST makes one album.
+// Mapped from the form HTML on 2026-10-26.
+export function buildPhotosForm(files: Blob[], names: string[], caption: string, token: string): FormData {
+  const form = new FormData();
+  form.set("authenticity_token", token);
+  form.set("modal", "true");
+  form.set("type", "AlbumEvidence");
+  for (let i = 0; i < files.length; i++) {
+    form.set(`evidence[photos_attributes][${i}][file]`, files[i], names[i]);
+    form.set(`evidence[photos_attributes][${i}][caption]`, caption);
+  }
+  form.set("commit", "Add Entry");
+  return form;
+}
+
+export async function addPhotos(experienceId: string, paths: string[], caption: string): Promise<void> {
+  const path = `${CAS_PATH}/${experienceId}/reflections`;
+  const html = await get(`${path}/new`);
+  const files = paths.map((p) => Bun.file(p));
+  const names = paths.map((p) => p.split("/").pop() ?? p);
+  await post(path, buildPhotosForm(files, names, caption, csrfToken(html)));
+}

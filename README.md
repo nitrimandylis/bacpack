@@ -53,15 +53,16 @@ nick@bacpack:~$ bacpack due --days 14
 | 08 | **`cas edit`** | changes one. anything you don't pass keeps its current value |
 | 09 | **`cas delete`** | removes one, after showing you its hours and reflection count |
 | 10 | **`cas reflect`** | adds a reflection to an experience, found by name. body only — see below |
-| 11 | **`class units`** | unit plans with their status and HL/SL badges |
-| 12 | **`class files`** | every file in the class, folder by folder. `--match` narrows, `--download DIR` saves |
-| 13 | **`class discussions`** | discussion posts in full: date, category, author and the body teachers put the homework in |
-| 14 | **`portfolio list`** | portfolio entries with their tags and the first lines of each body |
-| 15 | **`portfolio tags`** | the works and the whole IB tag taxonomy, grouped. works change every September |
-| 16 | **`portfolio add`** | adds an entry. `--tags concepts/culture` by name, no id lookup |
-| 17 | **`portfolio edit`** | changes an entry. anything you don't pass keeps its current value |
-| 18 | **`portfolio star`** | toggles the star |
-| 19 | **`portfolio delete`** | removes an entry, after showing you which one |
+| 11 | **`cas photos`** | uploads photos to an experience as one album, with an optional caption |
+| 12 | **`class units`** | unit plans with their status and HL/SL badges |
+| 13 | **`class files`** | every file in the class, folder by folder. `--match` narrows, `--download DIR` saves |
+| 14 | **`class discussions`** | discussion posts in full: date, category, author and the body teachers put the homework in |
+| 15 | **`portfolio list`** | portfolio entries with their tags and the first lines of each body |
+| 16 | **`portfolio tags`** | the works and the whole IB tag taxonomy, grouped. works change every September |
+| 17 | **`portfolio add`** | adds an entry. `--tags concepts/culture` by name, no id lookup |
+| 18 | **`portfolio edit`** | changes an entry. anything you don't pass keeps its current value |
+| 19 | **`portfolio star`** | toggles the star |
+| 20 | **`portfolio delete`** | removes an entry, after showing you which one |
 
 Every read takes `--json`. Every write previews and exits; `--confirm` is what actually posts.
 
@@ -69,7 +70,7 @@ Every read takes `--json`. Every write previews and exits; `--confirm` is what a
 
 Two ManageBac quirks worth knowing. A CAS group can only be set when the experience is created: the edit form has no group field, so `cas edit` omits it rather than posting a blank that would unlink it. And `class_stream` has no command, because it renders no items in the page source for any class tested, so it is either drawn by JavaScript or unused.
 
-`cas reflect` takes a body and nothing else. The create form carries no learning-outcome checkboxes, and an `evidence[url]` value posts cleanly and then appears nowhere. Both were tested live and silently dropped, so there are no flags for them — a flag that previews confidently and changes nothing is worse than a missing feature.
+`cas reflect` takes a body and nothing else. The create form carries no learning-outcome checkboxes, and an `evidence[url]` value posts cleanly and then appears nowhere. Both were tested live and silently dropped, so there are no flags for them — a flag that previews confidently and changes nothing is worse than a missing feature. The url turned out to belong to the form's Website tab: the form has one tab per evidence type, and a hidden `type` field picks which one gets created. `cas photos` uses the Photos tab, so every photo in one run lands in a single album.
 
 `task --download DIR` prints a one-line summary and ignores `--json`.
 
@@ -79,7 +80,7 @@ Two ManageBac quirks worth knowing. A CAS group can only be set when the experie
 
 `portfolio list` walks every page. The index holds ten entries a page, and reading only the first one returned the newest ten with exit code 0, which is indistinguishable from a class that has ten. A Greek class with sixteen entries reported ten, and the six it dropped were the oldest. The loop stops on the first page that adds nothing new, so a short portfolio still costs one request and a long one costs a request per ten entries.
 
-The experience flags are shared by `cas add` and `cas edit`: `--name`, `--start`, `--end`, `--creativity`, `--action`, `--service`, `--service-type`, `--approaches`, `--outcomes`, `--group`, `--notes-file`, `--project`, `--notify-advisor` and `--supervisor-name`, `-title`, `-email`, `-phone`. `cas edit`, `cas delete` and `cas reflect` find the experience with `--experience NAME`, and `portfolio edit`, `star` and `delete` take `--id N`. `--notify-advisor` is off unless passed, and `cas add` only: ManageBac's edit form has no such field, so `cas edit` rejects it.
+The experience flags are shared by `cas add` and `cas edit`: `--name`, `--start`, `--end`, `--creativity`, `--action`, `--service`, `--service-type`, `--approaches`, `--outcomes`, `--group`, `--notes-file`, `--project`, `--notify-advisor` and `--supervisor-name`, `-title`, `-email`, `-phone`. `cas edit`, `cas delete`, `cas reflect` and `cas photos` find the experience with `--experience NAME`, and `portfolio edit`, `star` and `delete` take `--id N`. `--notify-advisor` is off unless passed, and `cas add` only: ManageBac's edit form has no such field, so `cas edit` rejects it.
 
 `--class` takes part of a class name, not an id: `--class greek`. Ids change each school year, and every class exposes the portfolio route, so a name is both safer and shorter than the number.
 
