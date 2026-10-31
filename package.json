@@ -1,6 +1,6 @@
 {
   "name": "bacpack",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "ManageBac CLI: check what's due, log CAS experiences, and add Learner Portfolio entries from the terminal.",
   "type": "module",
   "license": "MIT",
