@@ -13,7 +13,8 @@
 
 *your deadlines, your CAS hours and your learner portfolio, without the four clicks*
 
-![runtime](https://img.shields.io/badge/runtime-bun-d97706?style=flat-square&labelColor=111111)
+![npm](https://img.shields.io/npm/v/bacpack?style=flat-square&labelColor=111111&color=d97706)
+![node](https://img.shields.io/badge/node-22%2B-d97706?style=flat-square&labelColor=111111)
 ![deps](https://img.shields.io/badge/dependencies-0-d97706?style=flat-square&labelColor=111111)
 ![writes](https://img.shields.io/badge/writes-preview_first-374151?style=flat-square&labelColor=111111)
 ![api](https://img.shields.io/badge/official_api-admin_only_(so_no)-374151?style=flat-square&labelColor=111111)
@@ -47,12 +48,12 @@ nick@bacpack:~$ bacpack due --days 14
 | 02 | **`task`** | one task's full description and its attachments, found by part of its title, its numeric id, or its url from `due --json`. `--class` narrows a title two classes share; the ambiguity error prints each id, which picks between two tasks sharing a title and a class. `--download DIR` saves the attachments |
 | 03 | **`classes`** | your classes and their ids, mostly so you can see what `--class` will match |
 | 04 | **`cas list`** | every CAS experience with hours, strands and reflection count |
-| 05 | **`cas outcomes`** | the seven IB learning outcomes and their ids — per school, so read, never hardcoded |
+| 05 | **`cas outcomes`** | the seven IB learning outcomes and their ids, per school, so read, never hardcoded |
 | 06 | **`cas groups`** | school groups you can attach an experience to |
 | 07 | **`cas add`** | creates an experience: strands, service type, approaches, supervisor, group, outcomes |
 | 08 | **`cas edit`** | changes one. anything you don't pass keeps its current value |
 | 09 | **`cas delete`** | removes one, after showing you its hours and reflection count |
-| 10 | **`cas reflect`** | adds a reflection to an experience, found by name. body only — see below |
+| 10 | **`cas reflect`** | adds a reflection to an experience, found by name. body only, see below |
 | 11 | **`cas photos`** | uploads photos to an experience as one album, with an optional caption |
 | 12 | **`class units`** | unit plans with their status and HL/SL badges |
 | 13 | **`class files`** | every file in the class, folder by folder. `--match` narrows, `--download DIR` saves |
@@ -70,7 +71,7 @@ Every read takes `--json`. Every write previews and exits; `--confirm` is what a
 
 Two ManageBac quirks worth knowing. A CAS group can only be set when the experience is created: the edit form has no group field, so `cas edit` omits it rather than posting a blank that would unlink it. And `class_stream` has no command, because it renders no items in the page source for any class tested, so it is either drawn by JavaScript or unused.
 
-`cas reflect` takes a body and nothing else. The create form carries no learning-outcome checkboxes, and an `evidence[url]` value posts cleanly and then appears nowhere. Both were tested live and silently dropped, so there are no flags for them — a flag that previews confidently and changes nothing is worse than a missing feature. The url turned out to belong to the form's Website tab: the form has one tab per evidence type, and a hidden `type` field picks which one gets created. `cas photos` uses the Photos tab, so every photo in one run lands in a single album.
+`cas reflect` takes a body and nothing else. The create form carries no learning-outcome checkboxes, and an `evidence[url]` value posts cleanly and then appears nowhere. Both were tested live and silently dropped, so there are no flags for them: a flag that previews confidently and changes nothing is worse than a missing feature. The url turned out to belong to the form's Website tab: the form has one tab per evidence type, and a hidden `type` field picks which one gets created. `cas photos` uses the Photos tab, so every photo in one run lands in a single album.
 
 `task --download DIR` prints a one-line summary and ignores `--json`.
 
@@ -86,14 +87,15 @@ The experience flags are shared by `cas add` and `cas edit`: `--name`, `--start`
 
 ## 🚀 Run it
 
-Needs [Bun](https://bun.sh). You supply two things: your school's subdomain, and your ManageBac login.
+Needs Node 22 or newer. Pick one:
 
 ```bash
-git clone https://github.com/nitrimandylis/bacpack.git
-cd bacpack
-bun install
-bun run compile   # → ~/.bun/bin/bacpack, plus man bacpack
+npx bacpack due           # no install
+npm i -g bacpack          # or install it
+bun add -g bacpack        # or with Bun
 ```
+
+You supply two things: your school's subdomain, and your ManageBac login. Nothing about any school is built in.
 
 Then, once:
 
@@ -109,15 +111,31 @@ chmod 600 ~/.config/managebac/credentials
 
 bacpack logs itself in and caches the session in `~/.config/managebac/cookie`. Sessions last about a fortnight rather than the year the cookie's `expires` attribute advertises, so when one dies the next command logs in again and carries on. You never refresh it by hand. If you would rather not store a password, paste a `_managebac_session` value into that cookie file yourself and bacpack will use it until it expires.
 
+Run `bacpack due` with nothing set up and it names what is missing.
+
 ```bash
 bacpack due
 bacpack task "stacks" --download ~/Downloads
 bacpack class files --class biology --match "paper 2" --download ~/Downloads
 bacpack portfolio add --class biology --body-file entry.html --tags culture
-man bacpack        # full reference, offline
+man bacpack        # full reference, offline (after npm i -g)
 ```
 
 The last write prints what it would send and stops. Add `--confirm` when you mean it.
+
+### Build from source
+
+Needs [Bun](https://bun.sh), the dev toolchain.
+
+```bash
+git clone https://github.com/nitrimandylis/bacpack.git
+cd bacpack
+bun install
+bun test
+bun src/index.ts --help   # run from source
+bun run build             # → dist/bacpack.js, the Node build npm ships
+bun run compile           # → ~/.bun/bin/bacpack standalone binary, plus man bacpack
+```
 
 ## 🤖 Driving it with an agent
 
@@ -129,7 +147,7 @@ It's a plain directory, not a vendor one, so drop it wherever your agent keeps s
 cp -R bacpack-cli ~/.claude/skills/     # or wherever yours looks
 ```
 
-`bun run compile` runs that line for you if `~/.claude/skills` already exists, and skips it if it doesn't — it won't create an agent's directory on a machine that never asked for one. Copy it wherever yours looks instead.
+An npm install does not ship the skill, so copy it from the repo. From a clone, `bun run compile` runs that line for you if `~/.claude/skills` already exists, and skips it if it doesn't: it won't create an agent's directory on a machine that never asked for one.
 
 ## 🔩 Under the hood
 
@@ -158,13 +176,13 @@ flowchart LR
 | due | `src/due.ts` | year inference, dedupe, and the guard that shouts when the selectors rot instead of reporting nothing due |
 | cas | `src/cas.ts` | experiences and the create form, including the advisor-email checkbox that ships pre-ticked, plus reflections and photo albums |
 | portfolio | `src/portfolio.ts` | reflections, the tag taxonomy, and the create form that has no title field |
-| classes | `src/classes.ts` | units, discussions, and the file tree — including the download, which reads each row's signed CDN link straight out of the markup |
+| classes | `src/classes.ts` | units, discussions, and the file tree, including the download, which reads each row's signed CDN link straight out of the markup |
 | task | `src/task.ts` | one task's page: the description and its attachments, found by title, id or url, reusing the file download from `classes.ts` |
 | cli | `src/index.ts` | argument parsing and the preview that stands between you and a permanent record |
 
 Four failure modes are handled by name, because all four have happened. A `302` to `/login`, or a `401`, means the session died: bacpack logs in again and replays the request, once. `422` means Rails refused the request format, which the `Accept` header prevents and the retry loop covers. `200` with nothing parseable means ManageBac changed its markup, so it exits non-zero rather than telling you your week is clear.
 
-**Stack:** Bun · TypeScript · `node:util` parseArgs · no runtime dependencies
+**Stack:** TypeScript · Node stdlib only (`node:util` parseArgs, `node:fs`, global `fetch`) · built and tested with Bun into one ESM file · no runtime dependencies
 
 ## 🙏 Credit
 

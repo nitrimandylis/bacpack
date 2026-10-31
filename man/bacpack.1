@@ -1,4 +1,4 @@
-.TH BACPACK 1 "2026-08-14" "bacpack 0.1.0" "User Commands"
+.TH BACPACK 1 "2026-10-31" "bacpack 0.2.0" "User Commands"
 .SH NAME
 bacpack \- read and write ManageBac from the terminal
 .SH SYNOPSIS
@@ -284,5 +284,13 @@ each an array of the values that class accepts.
 Non-zero on a rejected login, an unresolvable class or tag, or a page that parsed
 to nothing.
 The last case means ManageBac changed its markup, not that there is no work due.
+An unknown flag exits 2.
 .SH SEE ALSO
-.BR bun (1)
+.BR node (1),
+.BR npx (1)
+.PP
+Install with
+.B npm i \-g bacpack
+or run
+.BR "npx bacpack" .
+Needs Node 22 or newer.

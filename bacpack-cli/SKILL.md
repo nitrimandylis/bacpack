@@ -1,6 +1,6 @@
 ---
 name: bacpack-cli
-description: Drive ManageBac from the terminal via the bacpack CLI — check what is due, read a task's instructions and attachments, download a class's files, log CAS experiences, reflections and photos, and write Learner Portfolio entries. Use whenever the user asks what is due or overdue, what a task actually asks for, wants the handouts or resources from a class, mentions CAS hours, reflections or evidence photos, the Learner Portfolio or IA tab, wants coursework pushed into ManageBac, or names ManageBac at all.
+description: Drive ManageBac from the terminal via the bacpack CLI: check what is due, read a task's instructions and attachments, download a class's files, log CAS experiences, reflections and photos, and write Learner Portfolio entries. Use whenever the user asks what is due or overdue, what a task actually asks for, wants the handouts or resources from a class, mentions CAS hours, reflections or evidence photos, the Learner Portfolio or IA tab, wants coursework pushed into ManageBac, or names ManageBac at all.
 ---
 
 # bacpack
@@ -21,7 +21,7 @@ them itself and logs in again when the session lapses, which is roughly fortnigh
 session needs nothing from you or the user. `ManageBac rejected the login` is the one case that
 does: the password changed, and only the user can fix it.
 
-If the binary is not on PATH, run from source: `bun run src/index.ts …`
+If `bacpack` is not on PATH, run `npx bacpack …` (Node 22+), or from a clone `bun src/index.ts …`.
 
 ## The one rule for writes
 

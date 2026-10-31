@@ -65,8 +65,22 @@ unbuilt, absent.
 ## Status
 
 Every command has been exercised against a live account, including the writes and a full 67-file
-download. Zero runtime dependencies, 38 tests over the parts with real logic (year inference,
+download. Zero runtime dependencies, 40 tests over the parts with real logic (year inference,
 duplicate deadlines, label resolution across punctuation differences, the file rows, whose
 JSON arrives double-escaped inside an HTML attribute, discussion posts, which sit in sibling
 divs with no per-post wrapper, and the portfolio index, which is paginated and used to be read
 one page deep).
+
+## Distribution
+
+- **On npm as `bacpack` from 0.2.0.** `npx bacpack`, `npm i -g bacpack` or `bun add -g bacpack`,
+  on Node 22 or newer.
+- **Node APIs only at runtime.** `node:fs`, `node:util` parseArgs and global `fetch`, `FormData`
+  and `Blob`. No `Bun.*` call ships, so the one ESM file in `dist/` runs under plain Node.
+- **Bun stays the toolchain.** `bun test`, `bun src/index.ts`, `bun run build` for the npm file,
+  `bun run compile` for the standalone binary with man page and skill.
+- **Releases go through GitHub.** Publishing a GitHub release runs
+  `.github/workflows/publish.yml`, which tests, typechecks and runs `npm publish` authenticated
+  by OIDC (trusted publishing), so no npm token exists anywhere. npm cannot register a trusted
+  publisher for a package that has never been published, so 0.2.0 goes up by hand; every
+  version after it goes through a release.
