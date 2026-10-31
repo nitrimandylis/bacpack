@@ -50,7 +50,7 @@ const HELP = `bacpack - ManageBac from the terminal
 
 --class takes part of a class name, not an id, e.g. --class greek
   (on task it narrows a title that two classes share, e.g. --class "group 2 hl")
-TITLE on task is part of an upcoming task's title, or its /student/... url from due --json
+TITLE on task is part of an upcoming task's title, its numeric id, or its /student/... url from due --json
 --match takes part of a folder or file name, e.g. --match "paper 2"
 --tags and --works take a comma-separated list, and repeat for a label that
   contains a comma: --tags "Culture, identity and community" --tags "Identity"

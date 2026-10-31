@@ -45,3 +45,12 @@ test("a shared title is an error until --class narrows it", () => {
 test("a url picks exactly that task", () => {
   expect(pickTask(tasks, "/student/Stacks + Queues/CS Group 2").title).toBe("Stacks + Queues");
 });
+
+test("a numeric id picks between tasks sharing a title and class", () => {
+  const twins = [
+    { ...make("revision exercises", "CS Group 2"), url: "/student/classes/1/core_tasks/49427966" },
+    { ...make("revision exercises", "CS Group 2"), url: "/student/classes/1/core_tasks/49427972" },
+  ];
+  expect(() => pickTask(twins, "revision", "group 2")).toThrow("49427972");
+  expect(pickTask(twins, "49427972").url).toBe("/student/classes/1/core_tasks/49427972");
+});

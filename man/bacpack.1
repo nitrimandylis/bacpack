@@ -86,9 +86,10 @@ and the caption goes on each photo.
 .TP
 .B "task \fITITLE\fB [\-\-class \fINAME\fB] [\-\-download \fIDIR\fB]"
 One upcoming task: the description the teacher wrote and the files attached to
-it. \fITITLE\fR is part of the task title, or its \fI/student/...\fR url from
-\fBdue \-\-json\fR. When two classes set the same title, the command lists
-both and asks for \fB\-\-class\fR. \fB\-\-download\fR saves the attachments
+it. \fITITLE\fR is part of the task title, its numeric id, or its
+\fI/student/...\fR url from \fBdue \-\-json\fR. When two tasks match, the
+command lists them with their ids and asks for \fB\-\-class\fR or the id;
+two tasks with the same title in the same class can only be told apart by id. \fB\-\-download\fR saves the attachments
 under \fIDIR/<task title>/\fR. Only tasks still listed by \fBdue\fR can be found.
 .TP
 .B "class units|files|discussions \-\-class \fINAME\fR"

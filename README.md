@@ -44,7 +44,7 @@ nick@bacpack:~$ bacpack due --days 14
 | | command | what it actually does |
 |---|---|---|
 | 01 | **`due`** | upcoming deadlines, `--days N` to cut it short. infers the missing year, keeps genuine duplicates |
-| 02 | **`task`** | one task's full description and its attachments, found by part of its title or by its url from `due --json`. `--class` narrows a title two classes share. `--download DIR` saves the attachments |
+| 02 | **`task`** | one task's full description and its attachments, found by part of its title, its numeric id, or its url from `due --json`. `--class` narrows a title two classes share; the ambiguity error prints each id, which picks between two tasks sharing a title and a class. `--download DIR` saves the attachments |
 | 03 | **`classes`** | your classes and their ids, mostly so you can see what `--class` will match |
 | 04 | **`cas list`** | every CAS experience with hours, strands and reflection count |
 | 05 | **`cas outcomes`** | the seven IB learning outcomes and their ids — per school, so read, never hardcoded |
@@ -159,7 +159,7 @@ flowchart LR
 | cas | `src/cas.ts` | experiences and the create form, including the advisor-email checkbox that ships pre-ticked, plus reflections and photo albums |
 | portfolio | `src/portfolio.ts` | reflections, the tag taxonomy, and the create form that has no title field |
 | classes | `src/classes.ts` | units, discussions, and the file tree — including the download, which reads each row's signed CDN link straight out of the markup |
-| task | `src/task.ts` | one task's page: the description and its attachments, found by title or url, reusing the file download from `classes.ts` |
+| task | `src/task.ts` | one task's page: the description and its attachments, found by title, id or url, reusing the file download from `classes.ts` |
 | cli | `src/index.ts` | argument parsing and the preview that stands between you and a permanent record |
 
 Four failure modes are handled by name, because all four have happened. A `302` to `/login`, or a `401`, means the session died: bacpack logs in again and replays the request, once. `422` means Rails refused the request format, which the `Accept` header prevents and the retry loop covers. `200` with nothing parseable means ManageBac changed its markup, so it exits non-zero rather than telling you your week is clear.

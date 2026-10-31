@@ -36,13 +36,25 @@ export function parseTaskPage(html: string): TaskDetail {
   return { description, attachments };
 }
 
+// The task id is the last segment of its url, e.g. 49427966 in
+// /student/classes/12893535/core_tasks/49427966.
+export function taskId(task: Task): string {
+  return task.url.split("/").pop() ?? "";
+}
+
 // Title is a substring, case-insensitive, like --class. A teacher often sets
 // the same title in two classes (an SL and an HL group), so ambiguity is an
-// error that lists the candidates rather than a guess.
+// error that lists the candidates rather than a guess. A bare number is a task
+// id, the way to pick between two tasks that share a title and a class.
 export function pickTask(tasks: Task[], query: string, classQuery?: string): Task {
-  let found = query.startsWith("/student/")
-    ? tasks.filter((task) => task.url === query)
-    : tasks.filter((task) => task.title.toLowerCase().includes(query.toLowerCase()));
+  let found: Task[];
+  if (query.startsWith("/student/")) {
+    found = tasks.filter((task) => task.url === query);
+  } else if (/^\d+$/.test(query)) {
+    found = tasks.filter((task) => taskId(task) === query);
+  } else {
+    found = tasks.filter((task) => task.title.toLowerCase().includes(query.toLowerCase()));
+  }
   if (classQuery) {
     found = found.filter((task) => task.subject.toLowerCase().includes(classQuery.toLowerCase()));
   }
@@ -50,8 +62,8 @@ export function pickTask(tasks: Task[], query: string, classQuery?: string): Tas
   if (found.length === 0) {
     throw new Error(`No upcoming task matches "${query}". Run bacpack due to see what is listed.`);
   }
-  const list = found.map((task) => `  ${task.when}  ${task.subject}  ${task.title}`).join("\n");
-  throw new Error(`"${query}" matches ${found.length} tasks. Narrow it with --class:\n${list}`);
+  const list = found.map((task) => `  ${taskId(task)}  ${task.when}  ${task.subject}  ${task.title}`).join("\n");
+  throw new Error(`"${query}" matches ${found.length} tasks. Narrow it with --class, or pass the id:\n${list}`);
 }
 
 export async function fetchTaskDetail(url: string): Promise<TaskDetail> {
