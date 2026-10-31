@@ -82,7 +82,7 @@ bacpack portfolio star|delete --class NAME --id N [--confirm]
 - **Never pass `--notify-advisor`** unless the user explicitly asks. ManageBac's checkbox ships
   pre-ticked; bacpack sends `0` unless overridden, and overriding emails their CAS advisor.
   It is `cas add` only; `cas edit --notify-advisor` exits 1.
-- **`--class` takes part of a class name, never an id.** `--class greek`. Ids change every
+- **`--class` takes part of a class name, never an id.** `--class biology`. Ids change every
   September, and every class exposes the portfolio route, so an id is both brittle and unsafe.
 - **The Learner Portfolio has no title field.** Fold the title into the first block of the body
   HTML or the entry renders headless. `--body-file` takes HTML and passes it through unchanged.

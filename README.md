@@ -82,7 +82,7 @@ Two ManageBac quirks worth knowing. A CAS group can only be set when the experie
 
 The experience flags are shared by `cas add` and `cas edit`: `--name`, `--start`, `--end`, `--creativity`, `--action`, `--service`, `--service-type`, `--approaches`, `--outcomes`, `--group`, `--notes-file`, `--project`, `--notify-advisor` and `--supervisor-name`, `-title`, `-email`, `-phone`. `cas edit`, `cas delete`, `cas reflect` and `cas photos` find the experience with `--experience NAME`, and `portfolio edit`, `star` and `delete` take `--id N`. `--notify-advisor` is off unless passed, and `cas add` only: ManageBac's edit form has no such field, so `cas edit` rejects it.
 
-`--class` takes part of a class name, not an id: `--class greek`. Ids change each school year, and every class exposes the portfolio route, so a name is both safer and shorter than the number.
+`--class` takes part of a class name, not an id: `--class biology`. Ids change each school year, and every class exposes the portfolio route, so a name is both safer and shorter than the number.
 
 ## 🚀 Run it
 
@@ -112,8 +112,8 @@ bacpack logs itself in and caches the session in `~/.config/managebac/cookie`. S
 ```bash
 bacpack due
 bacpack task "stacks" --download ~/Downloads
-bacpack class files --class greek --match "paper 2" --download ~/Downloads
-bacpack portfolio add --class greek --body-file entry.html --tags culture
+bacpack class files --class biology --match "paper 2" --download ~/Downloads
+bacpack portfolio add --class biology --body-file entry.html --tags culture
 man bacpack        # full reference, offline
 ```
 
