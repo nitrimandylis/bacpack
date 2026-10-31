@@ -1,10 +1,10 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 // bacpack: a ManageBac CLI.
 //
 // Writes always print a preview and stop. Nothing is sent without --confirm.
 
 import { parseArgs } from "node:util";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { resolveClass, listClasses } from "./client.ts";
 import { fetchTasks, withinDays, type Task } from "./due.ts";
@@ -60,42 +60,54 @@ Needs MANAGEBAC_SCHOOL (your subdomain), plus either MANAGEBAC_EMAIL and
   MANAGEBAC_PASSWORD or ~/.config/managebac/credentials. Logs itself in.
 `;
 
-const { values, positionals } = parseArgs({
-  args: Bun.argv.slice(2),
-  allowPositionals: true,
-  options: {
-    help: { type: "boolean", short: "h" },
-    json: { type: "boolean" },
-    days: { type: "string" },
-    class: { type: "string" },
-    download: { type: "string" },
-    match: { type: "string" },
-    confirm: { type: "boolean" },
-    name: { type: "string" },
-    start: { type: "string" },
-    end: { type: "string" },
-    creativity: { type: "string" },
-    action: { type: "string" },
-    service: { type: "string" },
-    outcomes: { type: "string" },
-    "notes-file": { type: "string" },
-    project: { type: "boolean" },
-    "notify-advisor": { type: "boolean" },
-    "body-file": { type: "string" },
-    tags: { type: "string", multiple: true },
-    works: { type: "string", multiple: true },
-    experience: { type: "string" },
-    id: { type: "string" },
-    "service-type": { type: "string" },
-    approaches: { type: "string" },
-    group: { type: "string" },
-    caption: { type: "string" },
-    "supervisor-name": { type: "string" },
-    "supervisor-title": { type: "string" },
-    "supervisor-email": { type: "string" },
-    "supervisor-phone": { type: "string" },
-  },
-});
+function parseFlags() {
+  return parseArgs({
+    args: process.argv.slice(2),
+    allowPositionals: true,
+    options: {
+      help: { type: "boolean", short: "h" },
+      json: { type: "boolean" },
+      days: { type: "string" },
+      class: { type: "string" },
+      download: { type: "string" },
+      match: { type: "string" },
+      confirm: { type: "boolean" },
+      name: { type: "string" },
+      start: { type: "string" },
+      end: { type: "string" },
+      creativity: { type: "string" },
+      action: { type: "string" },
+      service: { type: "string" },
+      outcomes: { type: "string" },
+      "notes-file": { type: "string" },
+      project: { type: "boolean" },
+      "notify-advisor": { type: "boolean" },
+      "body-file": { type: "string" },
+      tags: { type: "string", multiple: true },
+      works: { type: "string", multiple: true },
+      experience: { type: "string" },
+      id: { type: "string" },
+      "service-type": { type: "string" },
+      approaches: { type: "string" },
+      group: { type: "string" },
+      caption: { type: "string" },
+      "supervisor-name": { type: "string" },
+      "supervisor-title": { type: "string" },
+      "supervisor-email": { type: "string" },
+      "supervisor-phone": { type: "string" },
+    },
+  });
+}
+
+// An unknown flag is an error with a one-line message, not a stack trace.
+let parsed: ReturnType<typeof parseFlags>;
+try {
+  parsed = parseFlags();
+} catch (error) {
+  console.error(`\n${(error as Error).message}\nRun bacpack --help for the flags.\n`);
+  process.exit(2);
+}
+const { values, positionals } = parsed;
 
 function required(flag: string): string {
   const value = values[flag as keyof typeof values];
@@ -380,7 +392,7 @@ async function main(): Promise<void> {
     const paths = positionals.slice(2);
     if (paths.length === 0) throw new Error("Give at least one photo file after the flags.");
     for (const path of paths) {
-      if (!(await Bun.file(path).exists())) throw new Error(`No such file: ${path}`);
+      if (!existsSync(path)) throw new Error(`No such file: ${path}`);
     }
 
     const ok = previewed([

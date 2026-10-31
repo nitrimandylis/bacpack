@@ -1,5 +1,6 @@
 // CAS experiences: list them, and create one.
 
+import { readFile } from "node:fs/promises";
 import { get, post, csrfToken, stripTags, decodeEntities } from "./client.ts";
 
 const CAS_PATH = "/student/ib/activity/cas";
@@ -341,10 +342,29 @@ export function buildPhotosForm(files: Blob[], names: string[], caption: string,
   return form;
 }
 
+// Each photo part carries its image type, the way a browser upload does.
+// Anything not listed goes up as a generic binary file.
+const PHOTO_TYPES: Record<string, string> = {
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  gif: "image/gif",
+  webp: "image/webp",
+  heic: "image/heic",
+};
+
+export function photoType(name: string): string {
+  const extension = name.split(".").pop()?.toLowerCase() ?? "";
+  return PHOTO_TYPES[extension] ?? "application/octet-stream";
+}
+
 export async function addPhotos(experienceId: string, paths: string[], caption: string): Promise<void> {
   const path = `${CAS_PATH}/${experienceId}/reflections`;
   const html = await get(`${path}/new`);
-  const files = paths.map((p) => Bun.file(p));
+  const files: Blob[] = [];
+  for (const p of paths) {
+    files.push(new Blob([await readFile(p)], { type: photoType(p) }));
+  }
   const names = paths.map((p) => p.split("/").pop() ?? p);
   await post(path, buildPhotosForm(files, names, caption, csrfToken(html)));
 }
