@@ -4,3 +4,4 @@ node_modules/
 *.local
 bacpack
 tapes/fixtures/
+dist/

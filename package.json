@@ -1,18 +1,46 @@
 {
   "name": "bacpack",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "ManageBac CLI: check what's due, log CAS experiences, and add Learner Portfolio entries from the terminal.",
   "type": "module",
-  "private": true,
   "license": "MIT",
+  "keywords": [
+    "managebac",
+    "ib",
+    "ib-diploma",
+    "cas",
+    "cli"
+  ],
   "bin": {
-    "bacpack": "./src/index.ts"
+    "bacpack": "dist/bacpack.js"
   },
+  "files": [
+    "dist",
+    "man",
+    "README.md",
+    "LICENSE"
+  ],
+  "man": [
+    "man/bacpack.1"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nitrimandylis/bacpack.git"
+  },
+  "homepage": "https://github.com/nitrimandylis/bacpack#readme",
+  "bugs": "https://github.com/nitrimandylis/bacpack/issues",
   "scripts": {
-    "compile": "bun build --compile src/index.ts --outfile ~/.bun/bin/bacpack && mkdir -p $(brew --prefix)/share/man/man1 && cp man/bacpack.1 $(brew --prefix)/share/man/man1/ && ([ -d ~/.claude/skills ] && cp -R bacpack-cli ~/.claude/skills/ || true)",
-    "test": "bun test"
+    "build": "bun build src/index.ts --target=node --format=esm --outfile dist/bacpack.js",
+    "prepack": "bun run build",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "compile": "bun build --compile src/index.ts --outfile ~/.bun/bin/bacpack && mkdir -p $(brew --prefix)/share/man/man1 && cp man/bacpack.1 $(brew --prefix)/share/man/man1/ && ([ -d ~/.claude/skills ] && cp -R bacpack-cli ~/.claude/skills/ || true)"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "typescript": "^5"
   }
 }
