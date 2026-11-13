@@ -316,7 +316,10 @@ async function main(): Promise<void> {
     const experiences = await cas.listExperiences();
     print(
       experiences,
-      experiences.map((e) => `${e.name}\n  ${[...e.hours, ...e.badges, e.reflections].join(" | ")}`),
+      experiences.map((e) => {
+        const project = e.project ? ["CAS Project"] : [];
+        return `${e.name}\n  ${[...e.hours, ...project, ...e.badges, e.reflections].join(" | ")}`;
+      }),
     );
     return;
   }

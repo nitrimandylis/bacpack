@@ -12,12 +12,16 @@ export type Experience = {
   badges: string[];
   hours: string[];
   reflections: string;
+  project: boolean;
 };
 
 export type Outcome = { id: string; label: string };
 
 export async function listExperiences(): Promise<Experience[]> {
-  const html = await get(CAS_PATH);
+  return parseExperiences(await get(CAS_PATH));
+}
+
+export function parseExperiences(html: string): Experience[] {
   const cards = html.split("activity-tile").slice(1);
   const experiences: Experience[] = [];
 
@@ -30,6 +34,8 @@ export async function listExperiences(): Promise<Experience[]> {
       badges: [...card.matchAll(/badge-label">([^<]+)<\/span>/g)].map((m) => m[1].trim()),
       hours: [...card.matchAll(/hour-type-hint-\w"[^>]*data-bs-title="([^"]+)"/g)].map((m) => m[1]),
       reflections: card.match(/reflections-count'>([^<]+)</)?.[1].trim() ?? "0 reflections",
+      // ManageBac marks a CAS Project with an icon on the tile, not a badge.
+      project: card.includes('alt="CAS Project"'),
     });
   }
 

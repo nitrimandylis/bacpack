@@ -47,7 +47,7 @@ nick@bacpack:~$ bacpack due --days 14
 | 01 | **`due`** | upcoming deadlines, `--days N` to cut it short. infers the missing year, keeps genuine duplicates |
 | 02 | **`task`** | one task's full description and its attachments, found by part of its title, its numeric id, or its url from `due --json`. `--class` narrows a title two classes share; the ambiguity error prints each id, which picks between two tasks sharing a title and a class. `--download DIR` saves the attachments |
 | 03 | **`classes`** | your classes and their ids, mostly so you can see what `--class` will match |
-| 04 | **`cas list`** | every CAS experience with hours, strands and reflection count |
+| 04 | **`cas list`** | every CAS experience with hours, strands, reflection count and CAS Project flag |
 | 05 | **`cas outcomes`** | the seven IB learning outcomes and their ids, per school, so read, never hardcoded |
 | 06 | **`cas groups`** | school groups you can attach an experience to |
 | 07 | **`cas add`** | creates an experience: strands, service type, approaches, supervisor, group, outcomes |

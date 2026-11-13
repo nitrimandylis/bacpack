@@ -42,7 +42,7 @@ bacpack task TITLE [--class NAME] [--json] [--download DIR]
                                         # the error lists each task's id; TITLE can be that id
                                         # (same title AND class: only the id picks one)
 bacpack classes [--json]
-bacpack cas list [--json]               # experiences with hours, badges, reflection counts
+bacpack cas list [--json]               # experiences with hours, badges, reflection counts, CAS Project flag
 bacpack cas outcomes                    # the 7 learning outcomes and their ids
 bacpack cas groups
 bacpack class units|files|discussions --class NAME [--json]
