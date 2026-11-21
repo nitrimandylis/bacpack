@@ -4,6 +4,7 @@
 // Writes always print a preview and stop. Nothing is sent without --confirm.
 
 import { parseArgs } from "node:util";
+import pkg from "../package.json" with { type: "json" };
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { resolveClass, listClasses } from "./client.ts";
@@ -48,6 +49,8 @@ const HELP = `bacpack - ManageBac from the terminal
   bacpack portfolio star --class NAME --id N [--confirm]
   bacpack portfolio delete --class NAME --id N [--confirm]
 
+  bacpack --version
+
 --class takes part of a class name, not an id, e.g. --class biology
   (on task it narrows a title that two classes share, e.g. --class "physics hl")
 TITLE on task is part of an upcoming task's title, its numeric id, or its /student/... url from due --json
@@ -66,6 +69,7 @@ function parseFlags() {
     allowPositionals: true,
     options: {
       help: { type: "boolean", short: "h" },
+      version: { type: "boolean", short: "v" },
       json: { type: "boolean" },
       days: { type: "string" },
       class: { type: "string" },
@@ -271,6 +275,10 @@ function formatTask(task: Task): string {
 }
 
 async function main(): Promise<void> {
+  if (values.version) {
+    console.log(pkg.version);
+    return;
+  }
   if (values.help || positionals.length === 0) {
     console.log(HELP);
     return;
