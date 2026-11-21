@@ -3,7 +3,7 @@
 // trimmed from a real /files/folder page.
 
 import { test, expect } from "bun:test";
-import { assetsOn, safeName, matching, parseDiscussions, parsePosted } from "./classes.ts";
+import { assetsOn, listFiles, safeName, matching, parseDiscussions, parsePosted } from "./classes.ts";
 
 const ROW = (id: string, name: string, size: number) =>
   `<div class='row file px-4' data-ec3-info='{&quot;download_url&quot;:` +
@@ -100,4 +100,20 @@ test("the body keeps its line breaks and leaks no markup", () => {
   expect(posts[0].body).not.toContain("Some title");
   expect(posts[0].body).not.toContain("<");
   expect(posts[0].body).not.toContain("class=");
+});
+
+// Trimmed from the real CS HL "Classroom Notes" page: it links itself in the
+// breadcrumb, then its subfolder. The walk must reach the subfolder's file
+// once and give it the folder path, not loop on the breadcrumb.
+test("listFiles follows a folder linked from inside a folder", async () => {
+  const LINK = (id: string, name: string) =>
+    `<a href="/student/classes/1/files/folder/${id}">${name}</a>`;
+  const pages: Record<string, string> = {
+    "/student/classes/1/files": LINK("10", "Classroom Notes"),
+    "/student/classes/1/files/folder/10": LINK("10", "Classroom Notes") + LINK("11", "paper 2"),
+    "/student/classes/1/files/folder/11":
+      LINK("10", "Classroom Notes") + LINK("11", "paper 2") + ROW("1", "Quicksort.pdf", 5),
+  };
+  const files = await listFiles("1", async (path) => pages[path]);
+  expect(files.map((f) => `${f.folder}/${f.name}`)).toEqual(["Classroom Notes/paper 2/Quicksort.pdf"]);
 });

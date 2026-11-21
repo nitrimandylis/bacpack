@@ -57,22 +57,41 @@ export function assetsOn(html: string, folder: string): ClassFile[] {
   return files;
 }
 
-// Folders are one level deep. Loose files at the top level link straight to
-// the CDN, so matching only /student/classes/ hrefs would miss them entirely.
-export async function listFiles(classId: string): Promise<ClassFile[]> {
-  const root = await get(`/student/classes/${classId}/files`);
+// Folder links on a page, in page order. A folder page links itself in its
+// breadcrumb and its parents too, so callers must skip ids they have seen.
+export function foldersOn(html: string): { id: string; name: string }[] {
+  const folders: { id: string; name: string }[] = [];
+  for (const match of html.matchAll(
+    /href="\/student\/classes\/\d+\/files\/folder\/(\d+)"[^>]*>([\s\S]*?)<\/a>/g,
+  )) {
+    const name = stripTags(match[2]);
+    if (name) folders.push({ id: match[1], name });
+  }
+  return folders;
+}
+
+// Folders nest (CS: Classroom Notes > paper 2), so every folder page is
+// searched for more folders. A file's folder is its path, "parent/child".
+// Loose files at the top level link straight to the CDN, so matching only
+// /student/classes/ hrefs would miss them entirely.
+// fetchPage is only swapped out by the test.
+export async function listFiles(classId: string, fetchPage = get): Promise<ClassFile[]> {
+  const root = await fetchPage(`/student/classes/${classId}/files`);
   const files = assetsOn(root, "");
   const seenFolders = new Set<string>();
 
-  for (const match of root.matchAll(
-    /href="\/student\/classes\/\d+\/files\/folder\/(\d+)"[^>]*>([\s\S]*?)<\/a>/g,
-  )) {
-    const [, id, label] = match;
-    const name = stripTags(label);
-    if (!name || seenFolders.has(id)) continue;
-    seenFolders.add(id);
-    files.push(...assetsOn(await get(`/student/classes/${classId}/files/folder/${id}`), name));
+  async function walk(html: string, parent: string): Promise<void> {
+    for (const folder of foldersOn(html)) {
+      if (seenFolders.has(folder.id)) continue;
+      seenFolders.add(folder.id);
+      const path = parent ? `${parent}/${folder.name}` : folder.name;
+      const page = await fetchPage(`/student/classes/${classId}/files/folder/${folder.id}`);
+      files.push(...assetsOn(page, path));
+      await walk(page, path);
+    }
   }
+
+  await walk(root, "");
   return files;
 }
 
@@ -111,7 +130,8 @@ export async function download(files: ClassFile[], dir: string): Promise<string[
 
   for (const file of files) {
     // Loose files sit at the top of the class, not in a folder named "".
-    const folderDir = file.folder ? join(dir, safeName(file.folder)) : dir;
+    // A nested folder becomes nested directories, each part made safe alone.
+    const folderDir = file.folder ? join(dir, ...file.folder.split("/").map(safeName)) : dir;
     const target = uniqueTarget(join(folderDir, safeName(file.name)), taken);
     taken.add(target);
     if (existsSync(target)) continue;
