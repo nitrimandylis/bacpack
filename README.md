@@ -58,12 +58,13 @@ nick@bacpack:~$ bacpack due --days 14
 | 12 | **`class units`** | unit plans with their status and HL/SL badges |
 | 13 | **`class files`** | every file in the class, folder by folder. `--match` narrows, `--download DIR` saves |
 | 14 | **`class discussions`** | discussion posts in full: date, category, author and the body teachers put the homework in |
-| 15 | **`portfolio list`** | portfolio entries with their tags and the first lines of each body |
-| 16 | **`portfolio tags`** | the works and the whole IB tag taxonomy, grouped. works change every September |
-| 17 | **`portfolio add`** | adds an entry. `--tags concepts/culture` by name, no id lookup |
-| 18 | **`portfolio edit`** | changes an entry. anything you don't pass keeps its current value |
-| 19 | **`portfolio star`** | toggles the star |
-| 20 | **`portfolio delete`** | removes an entry, after showing you which one |
+| 15 | **`year discussions`** | posts to your whole year group ("Class of 2027"), where coordinators put CAS rules and exam registration |
+| 16 | **`portfolio list`** | portfolio entries with their tags and the first lines of each body |
+| 17 | **`portfolio tags`** | the works and the whole IB tag taxonomy, grouped. works change every September |
+| 18 | **`portfolio add`** | adds an entry. `--tags concepts/culture` by name, no id lookup |
+| 19 | **`portfolio edit`** | changes an entry. anything you don't pass keeps its current value |
+| 20 | **`portfolio star`** | toggles the star |
+| 21 | **`portfolio delete`** | removes an entry, after showing you which one |
 
 Every read takes `--json`. Every write previews and exits; `--confirm` is what actually posts.
 
@@ -77,7 +78,7 @@ Two ManageBac quirks worth knowing. A CAS group can only be set when the experie
 
 `class files --download DIR` and `task --download DIR` are the only writes that need no `--confirm`, because they write to your disk and not to ManageBac. `task` saves a task's attachments under `DIR/<task title>/`. It rebuilds the class folder layout under `DIR/<class name>/`, skips anything already on disk so an interrupted run resumes by running it again, and numbers collisions rather than overwriting: a folder really can hold two different files under one name. Modern Greek A comes to 67 files and 235 MB, so it is not a small command: `--match "paper 2"` narrows it to one folder, `--match annotated` to one kind of file. The needle is tested against `folder/name`, so a single flag does both, and a needle that matches nothing is an error rather than a quiet empty download.
 
-`class discussions` reads the first page only, which is five posts. ManageBac hides the rest behind a "Show More" button whose route is not mapped, and at roughly a post a week that is weeks of headroom. A class that goes quiet for a term and then posts six times in one day loses the oldest of them. The body keeps its line breaks, because that is where the homework lives: teachers list the exercises one to a line.
+`class discussions` reads the first page only, which is five posts. ManageBac hides the rest behind a "Show More" button whose route is not mapped, and at roughly a post a week that is weeks of headroom. A class that goes quiet for a term and then posts six times in one day loses the oldest of them. The body keeps its line breaks, because that is where the homework lives: teachers list the exercises one to a line. `year discussions` reads the year group's page the same way, with the same five-post ceiling: that page belongs to no class or group, so `class discussions` cannot reach it.
 
 `portfolio list` walks every page. The index holds ten entries a page, and reading only the first one returned the newest ten with exit code 0, which is indistinguishable from a class that has ten. A Greek class with sixteen entries reported ten, and the six it dropped were the oldest. The loop stops on the first page that adds nothing new, so a short portfolio still costs one request and a long one costs a request per ten entries.
 

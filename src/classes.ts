@@ -179,7 +179,7 @@ export function blockText(html: string): string {
 // One post per div#discussion_{id}. Splitting on that marker rather than
 // matching a single regex over the whole page keeps each post's fields from
 // being read off its neighbour.
-export function parseDiscussions(html: string, classId: string): Discussion[] {
+export function parseDiscussions(html: string, listPath: string): Discussion[] {
   const posts: Discussion[] = [];
 
   for (const block of html.split(/<div id="discussion_/).slice(1)) {
@@ -211,7 +211,7 @@ export function parseDiscussions(html: string, classId: string): Discussion[] {
       postedAt: parsePosted(postedText),
       posted: postedText,
       body,
-      url: `/student/classes/${classId}/discussions/${id}`,
+      url: `${listPath}/${id}`,
     });
   }
   return posts;
@@ -223,6 +223,14 @@ export function parseDiscussions(html: string, classId: string): Discussion[] {
 // that goes quiet for a term and then posts six times in a day would lose the
 // oldest of them.
 export async function listDiscussions(classId: string): Promise<Discussion[]> {
-  const html = await get(`/student/classes/${classId}/discussions`);
-  return parseDiscussions(html, classId);
+  const path = `/student/classes/${classId}/discussions`;
+  return parseDiscussions(await get(path), path);
+}
+
+// The year group (e.g. "IB DP Class of 2027") is neither a class nor a group:
+// it is the page coordinators post to for the whole cohort, CAS rules and exam
+// registration among them. Same markup as a class, same five-post ceiling.
+export async function listYearDiscussions(): Promise<Discussion[]> {
+  const path = "/student/ib/discussions";
+  return parseDiscussions(await get(path), path);
 }

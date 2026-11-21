@@ -71,7 +71,7 @@ const POST = (id: string, category: string | null, body: string) =>
   `</div><div class='replies'></div></div></div>`;
 
 test("parseDiscussions reads each post's own fields, not its neighbour's", () => {
-  const posts = parseDiscussions(POST("2", "Homework", "<p>b</p>") + POST("1", null, "<p>a</p>"), "99");
+  const posts = parseDiscussions(POST("2", "Homework", "<p>b</p>") + POST("1", null, "<p>a</p>"), "/student/classes/99/discussions");
 
   expect(posts.map((p) => p.id)).toEqual(["2", "1"]);
   expect(posts[0].category).toBe("Homework");
@@ -91,7 +91,7 @@ test("parsePosted takes the year off the page instead of inferring it", () => {
 test("the body keeps its line breaks and leaks no markup", () => {
   const posts = parseDiscussions(
     POST("1", "Homework", "<p>From Diff1:</p><p>Ex. 1, 2</p><p>and 7,&nbsp;9</p>"),
-    "99",
+    "/student/classes/99/discussions",
   );
 
   // The line breaks are how teachers list exercises, so they have to survive.

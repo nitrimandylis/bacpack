@@ -39,6 +39,7 @@ const HELP = `bacpack - ManageBac from the terminal
   bacpack class units --class NAME [--json]
   bacpack class files --class NAME [--json] [--match TEXT] [--download DIR]
   bacpack class discussions --class NAME [--json]
+  bacpack year discussions [--json]         posts to your whole year group
 
   bacpack portfolio list --class NAME [--json]
   bacpack portfolio tags --class NAME [--json]
@@ -455,6 +456,15 @@ async function main(): Promise<void> {
       );
       return;
     }
+  }
+
+  if (command === "year" && sub === "discussions") {
+    const discussions = await classes.listYearDiscussions();
+    print(
+      discussions,
+      discussions.map((d) => `${d.posted}  ${d.author}\n  ${d.title}\n  ${d.body}\n`),
+    );
+    return;
   }
 
   if (command === "portfolio") {

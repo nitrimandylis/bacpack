@@ -98,6 +98,11 @@ its date, category, author and body, and the body keeps its line breaks because
 that is how teachers list exercises. Only the first page is read, which is five
 posts: the rest sits behind a \fIShow More\fR button whose route is not mapped.
 .TP
+.B "year discussions"
+Discussion posts on your year group's page, where coordinators post to the
+whole cohort. Same fields and the same five-post limit as
+\fBclass discussions\fR.
+.TP
 .B "class files \-\-class \fINAME\fB [\-\-match \fITEXT\fB] \-\-download \fIDIR\fR"
 Save the files under \fIDIR/<class name>/<folder>/\fR, keeping the folder
 layout, or all of them if \fB\-\-match\fR is omitted. Files already on disk are
@@ -260,7 +265,7 @@ The
 is a pre-signed CDN link fetched fresh for this response and it expires, so
 download from it now rather than storing it.
 .TP
-.B class discussions
+.B "class discussions", "year discussions"
 An array of
 .IR "{id, title, author, category, postedAt, posted, body, url}" .
 .I category

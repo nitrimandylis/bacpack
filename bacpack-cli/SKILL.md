@@ -46,6 +46,7 @@ bacpack cas list [--json]               # experiences with hours, badges, reflec
 bacpack cas outcomes                    # the 7 learning outcomes and their ids
 bacpack cas groups
 bacpack class units|files|discussions --class NAME [--json]
+bacpack year discussions [--json]       # year-group posts: coordinators, CAS rules, exam registration
 bacpack class files --class NAME [--match TEXT] [--download DIR]
                                         # --match "paper 2" or --match annotated narrows it
                                         # --download saves to DIR/<class>/<folder>/
@@ -137,6 +138,8 @@ bacpack portfolio star|delete --class NAME --id N [--confirm]
 - **`class discussions` returns the newest five posts.** ManageBac paginates behind a "Show More"
   button whose route is not mapped, so an older post is unreachable rather than absent. Say so
   instead of reporting that the class has posted nothing.
+- **A cohort-wide announcement is in `year discussions`, not any class.** Coordinators post to
+  the year group page, which no `--class` reaches. Check it before saying a notice was never sent.
 - **The homework is in the discussion body, not the title.** Each post carries its date, category,
   author and body, and the body keeps its line breaks because teachers list the exercises one to a
   line. Parse `--json` and read `body`; the plain output is formatted for a human to read.
